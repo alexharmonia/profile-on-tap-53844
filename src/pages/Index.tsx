@@ -3,8 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { CreditCard, Smartphone, Share2, Edit, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import nfcCard1 from '@/assets/nfc-card-1.jpg';
+import nfcCard2 from '@/assets/nfc-card-2.jpg';
+import nfcCard3 from '@/assets/nfc-card-3.jpg';
+import nfcCard4 from '@/assets/nfc-card-4.jpg';
+import nfcCard5 from '@/assets/nfc-card-5.jpg';
+import nfcCard6 from '@/assets/nfc-card-6.jpg';
+import nfcCard7 from '@/assets/nfc-card-7.jpg';
+import nfcCard8 from '@/assets/nfc-card-8.jpg';
+import nfcCard9 from '@/assets/nfc-card-9.jpg';
+import nfcCard10 from '@/assets/nfc-card-10.jpg';
+import Autoplay from 'embla-carousel-autoplay';
 
 const Index = () => {
   const { user } = useAuth();
@@ -56,13 +68,48 @@ const Index = () => {
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               Seu Cartão de Visita{' '}
-              <span className="bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
+              <span className="text-[hsl(217,91%,55%)]">
                 Digital
               </span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-white/90">
               Crie e gerencie seu perfil digital profissional com tecnologia NFC
             </p>
+            
+            {/* Carousel de cartões NFC */}
+            <div className="max-w-3xl mx-auto mb-8">
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                plugins={[
+                  Autoplay({
+                    delay: 3000,
+                  }),
+                ]}
+                className="w-full"
+              >
+                <CarouselContent>
+                  {[nfcCard1, nfcCard2, nfcCard3, nfcCard4, nfcCard5, nfcCard6, nfcCard7, nfcCard8, nfcCard9, nfcCard10].map((card, index) => (
+                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                      <div className="p-2">
+                        <div className="rounded-xl overflow-hidden shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 hover:scale-105">
+                          <img 
+                            src={card} 
+                            alt={`Exemplo de cartão NFC ${index + 1}`}
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex -left-12 bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 text-white" />
+                <CarouselNext className="hidden md:flex -right-12 bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 text-white" />
+              </Carousel>
+            </div>
+
             <div className="flex justify-center">
               <Button
                 size="lg"
