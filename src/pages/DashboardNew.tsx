@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DashboardAccordion, AccordionSection } from '@/components/DashboardAccordion';
 import { 
   Share2, Palette, Link as LinkIcon, List, DollarSign, 
-  ShoppingCart, MessageSquare, LogOut 
+  ShoppingCart, MessageSquare, LogOut, User 
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SocialLinksSection } from '@/components/dashboard/SocialLinksSection';
@@ -92,15 +92,26 @@ const DashboardNew = () => {
                 </p>
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/profile')}
+                className="gap-2"
+              >
+                <User className="h-4 w-4" />
+                Meu perfil
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </div>

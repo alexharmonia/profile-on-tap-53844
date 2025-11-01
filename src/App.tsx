@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import Login from "./pages/Login";
 import DashboardNew from "./pages/DashboardNew";
+import Profile from "./pages/Profile";
 import Card from "./pages/Card";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<DashboardNew />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/card/:userId" element={<Card />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
