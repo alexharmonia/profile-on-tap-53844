@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,8 @@ interface PersonalizationSectionProps {
 
 export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSectionProps) => {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     bio: profile?.bio || '',
@@ -58,7 +60,82 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
     }
   };
 
-  const handleDeleteImage = () => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione uma imagem válida.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter menos de 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+
+      // Upload para o Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, file, {
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública da imagem
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, profile_image_url: publicUrl }));
+
+      toast({
+        title: "Sucesso!",
+        description: "Imagem carregada com sucesso. Clique em 'Salvar' para confirmar.",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer upload da imagem.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (formData.profile_image_url && formData.profile_image_url.includes('profile-images')) {
+      try {
+        // Extrair o caminho do arquivo da URL
+        const urlParts = formData.profile_image_url.split('/profile-images/');
+        if (urlParts[1]) {
+          await supabase.storage
+            .from('profile-images')
+            .remove([urlParts[1]]);
+        }
+      } catch (error) {
+        console.error('Error deleting image:', error);
+      }
+    }
     setFormData(prev => ({ ...prev, profile_image_url: '' }));
   };
 
@@ -95,28 +172,46 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
       <div className="space-y-4">
         <Label>Imagem de Perfil</Label>
         <div className="flex items-center gap-6">
-          <Avatar className="h-24 w-24 border-4 border-primary/10">
+          <Avatar className="h-24 w-24 border-4 border-primary/10 shadow-[var(--shadow-elegant)]">
             <AvatarImage src={formData.profile_image_url} />
             <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 flex-1">
             <Input
-              placeholder="URL da imagem"
+              placeholder="URL da imagem (opcional)"
               value={formData.profile_image_url}
               onChange={(e) => handleChange('profile_image_url', e.target.value)}
               className="w-full"
             />
             <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border-primary/20"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
               >
-                <Upload className="h-4 w-4" />
-                Escolher Imagem
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Escolher Imagem
+                  </>
+                )}
               </Button>
               {formData.profile_image_url && (
                 <Button
@@ -124,11 +219,16 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
                   variant="destructive"
                   size="sm"
                   onClick={handleDeleteImage}
+                  className="gap-2"
                 >
                   <Trash2 className="h-4 w-4" />
+                  Remover
                 </Button>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Formatos aceitos: JPG, PNG, WEBP. Tamanho máximo: 5MB
+            </p>
           </div>
         </div>
       </div>

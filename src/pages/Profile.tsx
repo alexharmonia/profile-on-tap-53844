@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Phone, Mail, MessageCircle, Share2, MapPin, Briefcase,
   Instagram, Facebook, Twitter, Linkedin, Youtube, Music,
-  Globe, QrCode, ShoppingBag, ArrowLeft
+  Globe, QrCode, ShoppingBag, ArrowLeft, Download
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -135,6 +135,59 @@ const Profile = () => {
     });
   };
 
+  const handleSaveContact = () => {
+    // Criar vCard
+    let vcard = 'BEGIN:VCARD\n';
+    vcard += 'VERSION:3.0\n';
+    vcard += `FN:${profile?.full_name || 'Contato'}\n`;
+    
+    if (profile?.company) {
+      vcard += `ORG:${profile.company}\n`;
+    }
+    
+    if (profile?.position) {
+      vcard += `TITLE:${profile.position}\n`;
+    }
+    
+    if (profile?.phone) {
+      vcard += `TEL;TYPE=WORK,VOICE:${profile.phone}\n`;
+    }
+    
+    if (profile?.whatsapp_number) {
+      vcard += `TEL;TYPE=CELL:${profile.whatsapp_number}\n`;
+    }
+    
+    if (profile?.email) {
+      vcard += `EMAIL:${profile.email}\n`;
+    }
+    
+    if (profile?.website) {
+      vcard += `URL:${profile.website}\n`;
+    }
+    
+    if (profile?.location) {
+      vcard += `ADR:;;${profile.location};;;;\n`;
+    }
+    
+    vcard += 'END:VCARD\n';
+
+    // Criar blob e fazer download
+    const blob = new Blob([vcard], { type: 'text/vcard' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${profile?.full_name || 'contato'}.vcf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Sucesso!",
+      description: "Contato salvo com sucesso"
+    });
+  };
+
   const getSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'instagram': return Instagram;
@@ -216,11 +269,24 @@ const Profile = () => {
             )}
 
             {profile?.location && (
-              <div className="flex items-center justify-center gap-2 text-primary-foreground/80">
+              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4">
                 <MapPin className="h-4 w-4" />
                 <span>{profile.location}</span>
               </div>
             )}
+
+            <p className="text-primary-foreground/70 text-sm italic mb-4">
+              Tecnologia que funciona de verdade!
+            </p>
+
+            <Button
+              onClick={handleSaveContact}
+              className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-8 py-6 text-lg"
+              size="lg"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Salvar Agenda
+            </Button>
           </div>
         </Card>
 
