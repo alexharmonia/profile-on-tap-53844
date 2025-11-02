@@ -16,11 +16,13 @@ import { LinksOrderSection } from '@/components/dashboard/LinksOrderSection';
 import { PixSection } from '@/components/dashboard/PixSection';
 import { CatalogSection } from '@/components/dashboard/CatalogSection';
 import { ContactFormSection } from '@/components/dashboard/ContactFormSection';
+import { ShareDialog } from '@/components/ShareDialog';
 
 const DashboardNew = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -92,26 +94,35 @@ const DashboardNew = () => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/profile')}
-                className="gap-2"
-              >
-                <User className="h-4 w-4" />
-                Meu perfil
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShareDialogOpen(true)}
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Compartilhar
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/profile')}
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              Meu perfil
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
           </div>
         </div>
       </div>
@@ -183,6 +194,13 @@ const DashboardNew = () => {
           </AccordionSection>
         </DashboardAccordion>
       </div>
+
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        profileUrl={`${window.location.origin}/profile`}
+        userName={profile?.full_name || "Usuário"}
+      />
     </div>
   );
 };
