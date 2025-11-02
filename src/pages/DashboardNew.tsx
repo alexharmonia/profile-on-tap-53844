@@ -75,60 +75,60 @@ const DashboardNew = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground py-12 px-4 shadow-lg">
+      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground py-6 sm:py-8 md:py-12 px-3 sm:px-4 shadow-lg">
         <div className="container mx-auto max-w-4xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
+              <Avatar className="h-16 w-16 sm:h-18 sm:w-18 md:h-20 md:w-20 border-3 sm:border-4 border-white shadow-lg flex-shrink-0">
                 <AvatarImage src={profile?.profile_image_url} />
-                <AvatarFallback className="text-2xl font-bold bg-white text-primary">
+                <AvatarFallback className="text-xl sm:text-2xl font-bold bg-white text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h1 className="text-3xl font-bold">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">
                   Olá, {profile?.full_name || 'Usuário'}!
                 </h1>
-                <p className="text-primary-foreground/80 mt-1">
+                <p className="text-primary-foreground/80 mt-0.5 sm:mt-1 text-sm sm:text-base">
                   Gerencie seu cartão digital
                 </p>
               </div>
             </div>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShareDialogOpen(true)}
-              className="gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Compartilhar
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/profile')}
-              className="gap-2"
-            >
-              <User className="h-4 w-4" />
-              Meu perfil
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShareDialogOpen(true)}
+                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+              >
+                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Compartilhar</span>
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/profile')}
+                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+              >
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Meu perfil</span>
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+              >
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Sair</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-4xl px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         <DashboardAccordion>
           <AccordionSection
             value="social"

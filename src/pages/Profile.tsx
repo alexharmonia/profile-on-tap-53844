@@ -217,16 +217,16 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-secondary">
       {/* Header with Back Button */}
-      <div className="container mx-auto max-w-2xl px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/dashboard')}
             className="text-primary-foreground hover:bg-white/10"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
+            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Voltar</span>
           </Button>
           <Button
             variant="ghost"
@@ -234,93 +234,93 @@ const Profile = () => {
             onClick={handleShare}
             className="text-primary-foreground hover:bg-white/10"
           >
-            <Share2 className="h-4 w-4 mr-2" />
-            Compartilhar
+            <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Compartilhar</span>
           </Button>
         </div>
 
         {/* Profile Card */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-6 overflow-hidden">
-          <div className="bg-gradient-to-br from-white/20 to-transparent p-8 text-center">
-            <Avatar className="h-32 w-32 mx-auto border-4 border-white shadow-[var(--shadow-elegant)] mb-4">
+        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 overflow-hidden">
+          <div className="bg-gradient-to-br from-white/20 to-transparent p-4 sm:p-6 md:p-8 text-center">
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 mx-auto border-4 border-white shadow-[var(--shadow-elegant)] mb-4">
               <AvatarImage src={profile?.profile_image_url} />
-              <AvatarFallback className="text-4xl font-bold bg-white text-primary">
+              <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl font-bold bg-white text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
             
-            <h1 className="text-3xl font-bold text-primary-foreground mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground mb-2 px-2">
               {profile?.full_name}
             </h1>
             
             {profile?.bio && (
-              <p className="text-primary-foreground/90 italic text-lg mb-4">
+              <p className="text-primary-foreground/90 italic text-base sm:text-lg mb-4 px-2">
                 "{profile.bio}"
               </p>
             )}
 
             {(profile?.company || profile?.position) && (
-              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4">
-                <Briefcase className="h-4 w-4" />
-                <span>
+              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4 px-2 flex-wrap">
+                <Briefcase className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm sm:text-base text-center">
                   {profile?.position}{profile?.position && profile?.company ? ' - ' : ''}{profile?.company}
                 </span>
               </div>
             )}
 
             {profile?.location && (
-              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4">
-                <MapPin className="h-4 w-4" />
-                <span>{profile.location}</span>
+              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4 px-2">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{profile.location}</span>
               </div>
             )}
 
-            <p className="text-primary-foreground/70 text-sm italic mb-4">
+            <p className="text-primary-foreground/70 text-xs sm:text-sm italic mb-4 px-2">
               Tecnologia que funciona de verdade!
             </p>
 
             <Button
               onClick={handleSaveContact}
-              className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-8 py-6 text-lg"
+              className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
               size="lg"
             >
-              <Download className="h-5 w-5 mr-2" />
+              <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Salvar Agenda
             </Button>
           </div>
         </Card>
 
         {/* Contact Buttons */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
           {profile?.phone && (
             <Button
-              className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground"
+              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
               variant="outline"
               onClick={() => window.open(`tel:${profile.phone}`)}
             >
-              <Phone className="h-5 w-5 mr-3" />
+              <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
               Telefone
             </Button>
           )}
 
           {profile?.whatsapp_number && (
             <Button
-              className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground"
+              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
               variant="outline"
               onClick={() => window.open(`https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}`)}
             >
-              <MessageCircle className="h-5 w-5 mr-3" />
+              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
               WhatsApp
             </Button>
           )}
 
           {profile?.email && (
             <Button
-              className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground"
+              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
               variant="outline"
               onClick={() => window.open(`mailto:${profile.email}`)}
             >
-              <Mail className="h-5 w-5 mr-3" />
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
               E-mail
             </Button>
           )}
@@ -328,17 +328,17 @@ const Profile = () => {
 
         {/* Social Links */}
         {socialLinks.length > 0 && (
-          <div className="space-y-3 mb-6">
+          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
             {socialLinks.map((link) => {
               const Icon = getSocialIcon(link.platform);
               return (
                 <Button
                   key={link.id}
-                  className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground capitalize"
+                  className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground capitalize text-sm sm:text-base"
                   variant="outline"
                   onClick={() => window.open(link.url, '_blank')}
                 >
-                  <Icon className="h-5 w-5 mr-3" />
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
                   {link.platform}
                 </Button>
               );
@@ -348,15 +348,15 @@ const Profile = () => {
 
         {/* Custom Links */}
         {customLinks.length > 0 && (
-          <div className="space-y-3 mb-6">
+          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
             {customLinks.map((link) => (
               <Button
                 key={link.id}
-                className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground"
+                className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
                 variant="outline"
                 onClick={() => window.open(link.url, '_blank')}
               >
-                <Globe className="h-5 w-5 mr-3" />
+                <Globe className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
                 {link.title}
               </Button>
             ))}
@@ -366,7 +366,7 @@ const Profile = () => {
         {/* PIX Information */}
         {profile?.pix_key && (
           <Button
-            className="w-full h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground mb-6"
+            className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground mb-4 sm:mb-6 text-sm sm:text-base"
             variant="outline"
             onClick={() => {
               navigator.clipboard.writeText(profile.pix_key);
@@ -376,34 +376,34 @@ const Profile = () => {
               });
             }}
           >
-            <QrCode className="h-5 w-5 mr-3" />
+            <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
             PIX QR Code
           </Button>
         )}
 
         {/* Catalog Products */}
         {catalogProducts.length > 0 && (
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-6 p-6">
-            <h2 className="text-2xl font-bold text-primary-foreground mb-4 flex items-center gap-2">
-              <ShoppingBag className="h-6 w-6" />
+          <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground mb-4 flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
               Catálogo de Produtos
             </h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {catalogProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20"
+                  className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20"
                 >
-                  <h3 className="text-lg font-semibold text-primary-foreground mb-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-primary-foreground mb-2">
                     {product.name}
                   </h3>
                   {product.description && (
-                    <p className="text-primary-foreground/80 text-sm mb-2">
+                    <p className="text-primary-foreground/80 text-xs sm:text-sm mb-2 line-clamp-2">
                       {product.description}
                     </p>
                   )}
                   {product.price && (
-                    <p className="text-primary-foreground font-bold">
+                    <p className="text-primary-foreground font-bold text-sm sm:text-base">
                       R$ {parseFloat(product.price).toFixed(2)}
                     </p>
                   )}
@@ -414,8 +414,8 @@ const Profile = () => {
         )}
 
         {/* Contact Form */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] p-6">
-          <h2 className="text-2xl font-bold text-primary-foreground mb-6">
+        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground mb-4 sm:mb-6">
             Fale Conosco
           </h2>
           <form onSubmit={handleContactSubmit} className="space-y-4">

@@ -171,21 +171,21 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
 
       <div className="space-y-4">
         <Label>Imagem de Perfil</Label>
-        <div className="flex items-center gap-6">
-          <Avatar className="h-24 w-24 border-4 border-primary/10 shadow-[var(--shadow-elegant)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+          <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-3 sm:border-4 border-primary/10 shadow-[var(--shadow-elegant)] flex-shrink-0">
             <AvatarImage src={formData.profile_image_url} />
-            <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+            <AvatarFallback className="text-xl sm:text-2xl font-bold bg-primary/10 text-primary">
               {initials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col gap-2 flex-1 w-full">
             <Input
               placeholder="URL da imagem (opcional)"
               value={formData.profile_image_url}
               onChange={(e) => handleChange('profile_image_url', e.target.value)}
               className="w-full"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -197,19 +197,19 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
                 type="button"
                 variant="outline"
                 size="sm"
-                className="gap-2 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border-primary/20"
+                className="gap-2 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border-primary/20 flex-1 sm:flex-initial"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
               >
                 {uploading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Enviando...
+                    <span className="hidden xs:inline">Enviando...</span>
                   </>
                 ) : (
                   <>
                     <Upload className="h-4 w-4" />
-                    Escolher Imagem
+                    <span className="hidden xs:inline">Escolher Imagem</span>
                   </>
                 )}
               </Button>
@@ -219,10 +219,10 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
                   variant="destructive"
                   size="sm"
                   onClick={handleDeleteImage}
-                  className="gap-2"
+                  className="gap-2 flex-1 sm:flex-initial"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Remover
+                  <span className="hidden xs:inline">Remover</span>
                 </Button>
               )}
             </div>
@@ -233,11 +233,11 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
         </div>
       </div>
 
-      <div className="flex justify-between items-center pt-4">
-        <Button variant="outline" size="lg">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0 pt-4">
+        <Button variant="outline" size="lg" className="w-full sm:w-auto">
           Acessar personalização
         </Button>
-        <Button onClick={handleSave} disabled={loading} size="lg">
+        <Button onClick={handleSave} disabled={loading} size="lg" className="w-full sm:w-auto">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Salvar
         </Button>

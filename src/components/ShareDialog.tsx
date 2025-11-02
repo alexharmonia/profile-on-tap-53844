@@ -94,31 +94,31 @@ export const ShareDialog = ({ open, onOpenChange, profileUrl, userName }: ShareD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-center">
             Compartilhe este perfil
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3 py-4">
+        <div className="space-y-2 sm:space-y-3 py-3 sm:py-4">
           {shareOptions.map((option, index) => (
             <Button
               key={index}
               variant="ghost"
-              className="w-full justify-between h-14 px-4 hover:bg-muted/50 transition-all duration-200 group"
+              className="w-full justify-between h-12 sm:h-14 px-3 sm:px-4 hover:bg-muted/50 transition-all duration-200 group"
               onClick={option.onClick}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <div
-                  className={`${option.color} w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}
+                  className={`${option.color} w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 flex-shrink-0`}
                 >
-                  <option.icon className="h-5 w-5 text-white" />
+                  <option.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
-                <span className="font-medium text-foreground">{option.label}</span>
+                <span className="font-medium text-foreground text-sm sm:text-base text-left truncate">{option.label}</span>
               </div>
               <svg
-                className="h-5 w-5 text-muted-foreground"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -139,19 +139,19 @@ export const ShareDialog = ({ open, onOpenChange, profileUrl, userName }: ShareD
             <Button
               size="icon"
               variant="ghost"
-              className="absolute right-2 top-2 z-10"
+              className="absolute right-1 sm:right-2 top-1 sm:top-2 z-10"
               onClick={() => setShowQR(false)}
             >
               <X className="h-4 w-4" />
             </Button>
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary/20">
+            <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border-2 border-primary/20">
               <QRCode
                 value={profileUrl}
-                size={256}
-                className="w-full h-auto"
+                size={200}
+                className="w-full h-auto max-w-[200px] sm:max-w-[256px] mx-auto"
                 level="H"
               />
-              <p className="text-center text-sm text-muted-foreground mt-4">
+              <p className="text-center text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
                 Escaneie para acessar o perfil
               </p>
             </div>
