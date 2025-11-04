@@ -234,7 +234,12 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0 pt-4">
-        <Button variant="outline" size="lg" className="w-full sm:w-auto">
+        <Button 
+          variant="outline" 
+          size="lg" 
+          className="w-full sm:w-auto"
+          onClick={() => window.location.href = '/customization'}
+        >
           Acessar personalização
         </Button>
         <Button onClick={handleSave} disabled={loading} size="lg" className="w-full sm:w-auto">

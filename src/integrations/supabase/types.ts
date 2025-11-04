@@ -194,6 +194,48 @@ export type Database = {
           },
         ]
       }
+      customization_settings: {
+        Row: {
+          background_color: string | null
+          background_image_url: string | null
+          background_type: string | null
+          created_at: string | null
+          id: string
+          item_color: string | null
+          item_corner_radius: number | null
+          item_opacity: number | null
+          text_color: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          background_color?: string | null
+          background_image_url?: string | null
+          background_type?: string | null
+          created_at?: string | null
+          id?: string
+          item_color?: string | null
+          item_corner_radius?: number | null
+          item_opacity?: number | null
+          text_color?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          background_color?: string | null
+          background_image_url?: string | null
+          background_type?: string | null
+          created_at?: string | null
+          id?: string
+          item_color?: string | null
+          item_corner_radius?: number | null
+          item_opacity?: number | null
+          text_color?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       pix_keys: {
         Row: {
           created_at: string | null
