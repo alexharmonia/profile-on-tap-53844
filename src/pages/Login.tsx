@@ -199,7 +199,7 @@ const Login = () => {
                   type="button"
                   className="text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors text-center w-full mb-4"
                 >
-                  Esqueceu sua Senha?
+                  Acesso Admin
                 </button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
