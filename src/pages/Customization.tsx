@@ -82,6 +82,8 @@ const Customization = () => {
         .upsert({
           user_id: user.id,
           ...customization,
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) throw error;

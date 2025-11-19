@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import {
   Globe, QrCode, ShoppingBag, ArrowLeft, Download
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import QRCodeComponent from 'react-qr-code';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -21,6 +23,9 @@ const Profile = () => {
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [customLinks, setCustomLinks] = useState<any[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+  const [pixDialogOpen, setPixDialogOpen] = useState(false);
+  const [pixAmount, setPixAmount] = useState('');
+  const [pixQRData, setPixQRData] = useState('');
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -368,13 +373,7 @@ const Profile = () => {
           <Button
             className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground mb-4 sm:mb-6 text-sm sm:text-base"
             variant="outline"
-            onClick={() => {
-              navigator.clipboard.writeText(profile.pix_key);
-              toast({
-                title: "Copiado!",
-                description: "Chave PIX copiada para a área de transferência"
-              });
-            }}
+            onClick={() => setPixDialogOpen(true)}
           >
             <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
             PIX QR Code
@@ -459,6 +458,79 @@ const Profile = () => {
           </form>
         </Card>
       </div>
+
+      {/* PIX QR Code Dialog */}
+      <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
+        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-gradient-to-br from-card/95 to-card/90 border-border/50 shadow-[var(--shadow-elegant)]">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[var(--shadow-glow)]">
+              <QrCode className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <DialogTitle className="text-2xl text-center font-bold">PIX QR Code</DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              Digite o valor do PIX para gerar o QR Code
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="pix-amount" className="text-sm font-medium">Digite o valor do PIX</Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-sm shadow-sm">
+                  R$
+                </div>
+                <Input
+                  id="pix-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={pixAmount}
+                  onChange={(e) => setPixAmount(e.target.value)}
+                  className="pl-16 h-12 text-lg border-border/50 focus:border-primary transition-all duration-200"
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={() => {
+                if (!pixAmount || parseFloat(pixAmount) <= 0) {
+                  toast({
+                    title: "Valor inválido",
+                    description: "Por favor, digite um valor válido.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                const amount = parseFloat(pixAmount).toFixed(2);
+                const pixData = `${profile.pix_key}|${amount}|${profile.pix_beneficiary_name || profile.full_name}|${profile.pix_beneficiary_city || ''}`;
+                setPixQRData(pixData);
+              }}
+              className="w-full h-12 text-base font-semibold shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
+              size="lg"
+            >
+              Gerar QR Code
+            </Button>
+
+            {pixQRData && (
+              <div className="space-y-4 pt-4 border-t border-border/50">
+                <div className="flex justify-center p-6 bg-white rounded-xl shadow-inner">
+                  <QRCodeComponent value={pixQRData} size={200} />
+                </div>
+                <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border/30">
+                  <p className="text-sm font-medium text-foreground">Informações do PIX:</p>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <p><span className="font-semibold">Chave:</span> {profile.pix_key}</p>
+                    <p><span className="font-semibold">Beneficiário:</span> {profile.pix_beneficiary_name || profile.full_name}</p>
+                    <p><span className="font-semibold">Valor:</span> R$ {parseFloat(pixAmount).toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
