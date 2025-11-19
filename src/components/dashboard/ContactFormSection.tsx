@@ -444,6 +444,7 @@ export const ContactFormSection = ({ userId }: ContactFormSectionProps) => {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
+                  <th className="text-left p-3 font-medium text-sm">Ações</th>
                   <th className="text-left p-3 font-medium text-sm">Nome</th>
                   <th className="text-left p-3 font-medium text-sm">Telefone</th>
                   <th className="text-left p-3 font-medium text-sm">E-mail</th>
@@ -454,6 +455,37 @@ export const ContactFormSection = ({ userId }: ContactFormSectionProps) => {
               <tbody>
                 {filteredSubmissions.map((submission) => (
                   <tr key={submission.id} className="border-t border-border/50 hover:bg-muted/20 transition-colors">
+                    <td className="p-3 text-sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          if (confirm('Tem certeza que deseja excluir esta submissão?')) {
+                            const { error } = await supabase
+                              .from('contact_submissions')
+                              .delete()
+                              .eq('id', submission.id);
+                            
+                            if (!error) {
+                              toast({
+                                title: "Sucesso",
+                                description: "Submissão excluída com sucesso.",
+                              });
+                              loadSubmissions();
+                            } else {
+                              toast({
+                                title: "Erro",
+                                description: "Não foi possível excluir a submissão.",
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        }}
+                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
                     <td className="p-3 text-sm">{submission.name || '-'}</td>
                     <td className="p-3 text-sm">{submission.phone || '-'}</td>
                     <td className="p-3 text-sm">{submission.email || '-'}</td>
