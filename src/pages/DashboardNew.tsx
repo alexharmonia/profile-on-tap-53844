@@ -11,7 +11,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { SocialLinksSection } from '@/components/dashboard/SocialLinksSection';
 import { PersonalizationSection } from '@/components/dashboard/PersonalizationSection';
-import { CustomLinkSection } from '@/components/dashboard/CustomLinkSection';
+
 import { LinksOrderSection } from '@/components/dashboard/LinksOrderSection';
 import { PixSection } from '@/components/dashboard/PixSection';
 import { CatalogSection } from '@/components/dashboard/CatalogSection';
@@ -146,15 +146,6 @@ const DashboardNew = () => {
             iconColor="bg-purple-500"
           >
             <PersonalizationSection profile={profile} onUpdate={loadProfile} />
-          </AccordionSection>
-
-          <AccordionSection
-            value="custom-link"
-            title="LINK PERSONALIZADO"
-            icon={LinkIcon}
-            iconColor="bg-green-500"
-          >
-            <CustomLinkSection profile={profile} onUpdate={loadProfile} />
           </AccordionSection>
 
           <AccordionSection

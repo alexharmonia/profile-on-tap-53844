@@ -1,30 +1,119 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { GripVertical, Edit, Trash2, Plus } from 'lucide-react';
+import { Loader2, GripVertical, Edit, Trash2, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { IconPicker } from '@/components/IconPicker';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface LinksOrderSectionProps {
   userId: string;
 }
 
+interface CustomLink {
+  id: string;
+  title: string;
+  url: string;
+  icon: string;
+  display_order: number;
+}
+
+function SortableItem({ link, onEdit, onDelete }: { 
+  link: CustomLink; 
+  onEdit: (link: CustomLink) => void;
+  onDelete: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:bg-accent/5 transition-colors"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="font-medium truncate">{link.title}</p>
+        <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onEdit(link)}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => onDelete(link.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
-  const [links, setLinks] = useState<any[]>([]);
+  const [links, setLinks] = useState<CustomLink[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<any>(null);
+  const [editingLink, setEditingLink] = useState<CustomLink | null>(null);
+  
   const [formData, setFormData] = useState({
     title: '',
     url: '',
     icon: 'globe',
-    is_pulsing: false,
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     loadLinks();
@@ -45,11 +134,53 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
     setLinks(data || []);
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = links.findIndex((link) => link.id === active.id);
+    const newIndex = links.findIndex((link) => link.id === over.id);
+
+    const newLinks = arrayMove(links, oldIndex, newIndex);
+    setLinks(newLinks);
+
+    // Update display_order in database
+    try {
+      const updates = newLinks.map((link, index) => ({
+        id: link.id,
+        display_order: index,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('custom_links')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Ordem dos links atualizada.",
+      });
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a ordem.",
+        variant: "destructive",
+      });
+      loadLinks(); // Reload to get correct order
+    }
+  };
+
   const handleSaveLink = async () => {
     if (!formData.title.trim() || !formData.url.trim()) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios.",
+        description: "Por favor, preencha todos os campos.",
         variant: "destructive",
       });
       return;
@@ -61,32 +192,41 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
       if (editingLink) {
         const { error } = await supabase
           .from('custom_links')
-          .update(formData)
+          .update({
+            title: formData.title,
+            url: formData.url,
+            icon: formData.icon,
+          })
           .eq('id', editingLink.id);
 
         if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Link atualizado com sucesso.",
+        });
       } else {
         const { error } = await supabase
           .from('custom_links')
-          .insert([
-            {
-              ...formData,
-              user_id: userId,
-              display_order: links.length,
-            },
-          ]);
+          .insert([{
+            user_id: userId,
+            title: formData.title,
+            url: formData.url,
+            icon: formData.icon,
+            display_order: links.length,
+          }]);
 
         if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Link adicionado com sucesso.",
+        });
       }
 
-      toast({
-        title: "Sucesso!",
-        description: editingLink ? "Link atualizado." : "Link adicionado.",
-      });
-
       setDialogOpen(false);
+      setFormData({ title: '', url: '', icon: 'globe' });
       setEditingLink(null);
-      setFormData({ title: '', url: '', icon: 'globe', is_pulsing: false });
       loadLinks();
     } catch (error) {
       console.error('Error saving link:', error);
@@ -101,48 +241,51 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
   };
 
   const handleDeleteLink = async (id: string) => {
-    const { error } = await supabase
-      .from('custom_links')
-      .delete()
-      .eq('id', id);
+    if (!confirm('Deseja realmente excluir este link?')) return;
 
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('custom_links')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Link excluído com sucesso.",
+      });
+
+      loadLinks();
+    } catch (error) {
+      console.error('Error deleting link:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível deletar o link.",
+        description: "Não foi possível excluir o link.",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Sucesso!",
-      description: "Link deletado.",
-    });
-
-    loadLinks();
   };
 
-  const handleEditLink = (link: any) => {
+  const handleEditLink = (link: CustomLink) => {
     setEditingLink(link);
     setFormData({
       title: link.title,
       url: link.url,
-      icon: link.icon || 'globe',
-      is_pulsing: link.is_pulsing || false,
+      icon: link.icon,
     });
     setDialogOpen(true);
   };
 
   const handleAddNew = () => {
     setEditingLink(null);
-    setFormData({ title: '', url: '', icon: 'globe', is_pulsing: false });
+    setFormData({ title: '', url: '', icon: 'globe' });
     setDialogOpen(true);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Arraste os links para reordenar como eles aparecerão no seu cartão.
         </p>
@@ -150,36 +293,37 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
           <DialogTrigger asChild>
             <Button onClick={handleAddNew} size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              ADICIONAR LINK
+              Adicionar Link
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingLink ? 'Editar Link' : 'Adicionar Link'}</DialogTitle>
+              <DialogTitle>
+                {editingLink ? 'Editar Link' : 'Adicionar Link'}
+              </DialogTitle>
               <DialogDescription>
-                HOME &gt; LINKS &gt; LINKS
+                Preencha as informações do link personalizado.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título (máx. 50 caracteres)</Label>
+                <Label htmlFor="title">Título</Label>
                 <Input
                   id="title"
-                  placeholder="Título do link"
+                  placeholder="Ex: Meu Site"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  maxLength={50}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="url">Link (URL, email ou telefone)</Label>
+                <Label htmlFor="url">URL</Label>
                 <Input
                   id="url"
                   placeholder="https://exemplo.com"
                   value={formData.url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 />
               </div>
 
@@ -187,80 +331,55 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
                 <Label>Ícone</Label>
                 <IconPicker
                   value={formData.icon}
-                  onChange={(icon) => setFormData(prev => ({ ...prev, icon }))}
+                  onChange={(icon) => setFormData({ ...formData, icon })}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Botão pulsante?</Label>
-                <Select
-                  value={formData.is_pulsing ? 'yes' : 'no'}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, is_pulsing: value === 'yes' }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no">Não</SelectItem>
-                    <SelectItem value="yes">Sim</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleSaveLink} disabled={loading}>
-                Salvar
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingLink ? 'Atualizar' : 'Adicionar'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="space-y-2">
-        {links.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>Nenhum link personalizado ainda.</p>
-            <p className="text-sm mt-2">Clique em "ADICIONAR LINK" para começar.</p>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={links.map(link => link.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {links.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum link adicionado ainda.
+              </p>
+            ) : (
+              links.map((link) => (
+                <SortableItem
+                  key={link.id}
+                  link={link}
+                  onEdit={handleEditLink}
+                  onDelete={handleDeleteLink}
+                />
+              ))
+            )}
           </div>
-        ) : (
-          links.map((link) => (
-            <div
-              key={link.id}
-              className="flex items-center gap-4 p-4 bg-card border rounded-lg hover:shadow-md transition-shadow"
-            >
-              <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-              <div className="flex-1">
-                <p className="font-medium">{link.title}</p>
-                <p className="text-sm text-muted-foreground truncate">{link.url}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={link.show_icon_only} />
-                <span className="text-sm text-muted-foreground">Exibir apenas ícone</span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEditLink(link)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteLink(link.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
