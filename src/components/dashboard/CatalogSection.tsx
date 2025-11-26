@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { GripVertical, Edit, Trash2, Plus } from 'lucide-react';
+import { GripVertical, Edit, Trash2, Plus, X, Upload } from 'lucide-react';
+import { applyCurrencyMask, parseCurrencyToNumber } from '@/lib/pixUtils';
 
 interface CatalogSectionProps {
   userId: string;
@@ -28,7 +29,10 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
     button_text: 'Mais informações',
     link_type: 'custom',
     link_url: '',
+    show_images_above: false,
+    images: [] as string[],
   });
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -65,11 +69,13 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
     try {
       const productData = {
         name: formData.name,
-        price: formData.price ? parseFloat(formData.price) : null,
+        price: formData.price ? parseCurrencyToNumber(formData.price) : null,
         description: formData.description || null,
         button_text: formData.button_text,
         link_type: formData.link_type,
         link_url: formData.link_url || null,
+        show_images_above: formData.show_images_above,
+        images: formData.images,
       };
 
       if (editingProduct) {
@@ -107,6 +113,8 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
         button_text: 'Mais informações',
         link_type: 'custom',
         link_url: '',
+        show_images_above: false,
+        images: [],
       });
       loadProducts();
     } catch (error) {
@@ -166,11 +174,13 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price?.toString() || '',
+      price: product.price ? applyCurrencyMask((product.price * 100).toString()) : '',
       description: product.description || '',
       button_text: product.button_text || 'Mais informações',
       link_type: product.link_type || 'custom',
       link_url: product.link_url || '',
+      show_images_above: product.show_images_above || false,
+      images: product.images || [],
     });
     setDialogOpen(true);
   };
@@ -184,8 +194,65 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
       button_text: 'Mais informações',
       link_type: 'custom',
       link_url: '',
+      show_images_above: false,
+      images: [],
     });
     setDialogOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+
+    try {
+      const uploadedUrls: string[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Date.now()}-${i}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('profile-images')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('profile-images')
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls],
+      }));
+
+      toast({
+        title: "Sucesso!",
+        description: `${uploadedUrls.length} imagem(ns) adicionada(s).`,
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer upload das imagens.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   };
 
   const formatPrice = (price: number | null) => {
@@ -260,20 +327,16 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
                 <Label htmlFor="product-price" className="text-sm font-medium">
                   Preço (R$)
                 </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
-                    R$
-                  </span>
-                  <Input
-                    id="product-price"
-                    type="number"
-                    step="0.01"
-                    placeholder="0,00"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="h-11 pl-10 transition-all duration-200 focus:ring-2 focus:ring-primary"
-                  />
-                </div>
+                <Input
+                  id="product-price"
+                  placeholder="0,00"
+                  value={formData.price}
+                  onChange={(e) => {
+                    const masked = applyCurrencyMask(e.target.value);
+                    setFormData(prev => ({ ...prev, price: masked }));
+                  }}
+                  className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary"
+                />
               </div>
 
               <div className="space-y-2">
@@ -339,8 +402,130 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
                     <p className="text-xs text-muted-foreground">
                       Digite apenas números, incluindo código do país e DDD
                     </p>
-                  )}
+              )}
+              
+              {/* Seção de imagens */}
+              <div className="space-y-3 pt-3 border-t">
+                <Label className="text-sm font-medium">Imagens do Produto</Label>
+                <p className="text-xs text-muted-foreground">
+                  Você pode arrastar as imagens para ordenar da maneira que desejar
+                </p>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-images-above"
+                    checked={formData.show_images_above}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_images_above: checked as boolean }))}
+                  />
+                  <Label htmlFor="show-images-above" className="text-sm font-normal cursor-pointer">
+                    Exibir as imagens acima do título e descrição
+                  </Label>
                 </div>
+
+                <div className="space-y-3">
+                  {formData.images.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-border group">
+                          <img src={img} alt={`Produto ${index + 1}`} className="w-full h-full object-cover" />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="destructive"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
+                    <input
+                      type="file"
+                      id="product-images"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      disabled={uploadingImages}
+                    />
+                    <Label htmlFor="product-images" className="cursor-pointer">
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <div className="text-sm">
+                          {uploadingImages ? (
+                            <span className="text-primary">Enviando imagens...</span>
+                          ) : (
+                            <>
+                              <span className="font-medium text-primary">Clique para adicionar</span>
+                              <span className="text-muted-foreground"> ou arraste imagens aqui</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview do Produto */}
+              {(formData.name || formData.description || formData.price || formData.images.length > 0) && (
+                <div className="space-y-3 pt-3 border-t">
+                  <Label className="text-sm font-medium">Preview do Produto</Label>
+                  <div className="border-2 border-border rounded-lg p-4 bg-muted/20">
+                    {formData.show_images_above && formData.images.length > 0 && (
+                      <div className="mb-3">
+                        <img 
+                          src={formData.images[0]} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+                    
+                    {formData.name && (
+                      <h3 className="text-lg font-semibold mb-2">{formData.name}</h3>
+                    )}
+
+                    {!formData.show_images_above && formData.images.length > 0 && (
+                      <div className="mb-3">
+                        <img 
+                          src={formData.images[0]} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+                    
+                    {formData.description && (
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {formData.description}
+                      </p>
+                    )}
+                    
+                    {formData.price && (
+                      <p className="text-base font-bold text-primary mb-3">
+                        {formData.price}
+                      </p>
+                    )}
+                    
+                    <Button 
+                      type="button" 
+                      className="w-full"
+                      size="sm"
+                      disabled
+                    >
+                      {formData.button_text || 'Mais informações'}
+                      {formData.link_type === 'whatsapp' && ' via WhatsApp'}
+                      {formData.link_type === 'pix' && ' com PIX'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
               )}
             </div>
 
