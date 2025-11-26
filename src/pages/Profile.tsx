@@ -11,10 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Phone, Mail, MessageCircle, Share2, MapPin, Briefcase,
   Instagram, Facebook, Twitter, Linkedin, Youtube, Music,
-  Globe, QrCode, ShoppingBag, ArrowLeft, Download
+  Globe, QrCode, ShoppingBag, Download, Copy
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import QRCodeComponent from 'react-qr-code';
+import { generatePixPayload } from '@/lib/pixUtils';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -221,29 +222,8 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-secondary">
-      {/* Header with Back Button */}
+      {/* Header - Sem botões */}
       <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="text-primary-foreground hover:bg-white/10"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Voltar</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-            className="text-primary-foreground hover:bg-white/10"
-          >
-            <Share2 className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Compartilhar</span>
-          </Button>
-        </div>
-
         {/* Profile Card */}
         <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 overflow-hidden">
           <div className="bg-gradient-to-br from-white/20 to-transparent p-4 sm:p-6 md:p-8 text-center">
@@ -284,14 +264,26 @@ const Profile = () => {
               Tecnologia que funciona de verdade!
             </p>
 
-            <Button
-              onClick={handleSaveContact}
-              className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
-              size="lg"
-            >
-              <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              Salvar Agenda
-            </Button>
+            {/* Botões de ação no perfil */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+              <Button
+                onClick={handleSaveContact}
+                className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
+                size="lg"
+              >
+                <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Salvar Agenda
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
+                size="lg"
+              >
+                <Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Compartilhar
+              </Button>
+            </div>
           </div>
         </Card>
 
@@ -503,9 +495,16 @@ const Profile = () => {
                   return;
                 }
 
-                const amount = parseFloat(pixAmount).toFixed(2);
-                const pixData = `${profile.pix_key}|${amount}|${profile.pix_beneficiary_name || profile.full_name}|${profile.pix_beneficiary_city || ''}`;
-                setPixQRData(pixData);
+                // Gera payload PIX válido
+                const amount = parseFloat(pixAmount);
+                const pixPayload = generatePixPayload(
+                  profile.pix_key,
+                  profile.pix_beneficiary_name || profile.full_name,
+                  profile.pix_beneficiary_city || 'SAO PAULO',
+                  amount,
+                  `TXN${Date.now()}`
+                );
+                setPixQRData(pixPayload);
               }}
               className="w-full h-12 text-base font-semibold shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
               size="lg"
@@ -514,17 +513,32 @@ const Profile = () => {
             </Button>
 
             {pixQRData && (
-              <div className="space-y-4 pt-4 border-t border-border/50">
+              <div className="space-y-4 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="flex justify-center p-6 bg-white rounded-xl shadow-inner">
-                  <QRCodeComponent value={pixQRData} size={200} />
+                  <QRCodeComponent value={pixQRData} size={200} level="H" />
                 </div>
-                <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border/30">
+                <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/30">
                   <p className="text-sm font-medium text-foreground">Informações do PIX:</p>
-                  <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="space-y-2 text-xs text-muted-foreground">
                     <p><span className="font-semibold">Chave:</span> {profile.pix_key}</p>
                     <p><span className="font-semibold">Beneficiário:</span> {profile.pix_beneficiary_name || profile.full_name}</p>
                     <p><span className="font-semibold">Valor:</span> R$ {parseFloat(pixAmount).toFixed(2)}</p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(pixQRData);
+                      toast({
+                        title: "Copiado!",
+                        description: "Código PIX copiado para a área de transferência",
+                      });
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Código PIX
+                  </Button>
                 </div>
               </div>
             )}

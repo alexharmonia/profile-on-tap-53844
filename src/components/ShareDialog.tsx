@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QrCode, Send, Mail, Copy, Check, X } from "lucide-react";
+import { QrCode, Send, Mail, Copy, Check, X, Instagram } from "lucide-react";
 import { Facebook, MessageCircle } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useState } from "react";
@@ -29,12 +29,40 @@ export const ShareDialog = ({ open, onOpenChange, profileUrl, userName }: ShareD
     }
   };
 
+  const handleInstagramShare = async () => {
+    // Tenta usar Web Share API se disponível
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Cartão Digital - ${userName}`,
+          text: `Confira o cartão digital de ${userName}`,
+          url: profileUrl,
+        });
+        toast.success("Compartilhado com sucesso!");
+      } catch (error) {
+        // Usuário cancelou ou erro - fallback para copiar
+        handleCopy();
+        toast.info("Link copiado! Abra o Instagram e cole no seu post/story.");
+      }
+    } else {
+      // Fallback: copia link
+      handleCopy();
+      toast.info("Link copiado! Abra o Instagram e cole no seu post/story.");
+    }
+  };
+
   const shareOptions = [
     {
       icon: QrCode,
       label: "Abrir QR Code",
       color: "bg-gray-900",
       onClick: () => setShowQR(!showQR),
+    },
+    {
+      icon: Instagram,
+      label: "Compartilhar no Instagram",
+      color: "bg-gradient-to-br from-[#405DE6] via-[#E1306C] to-[#FFDC80]",
+      onClick: handleInstagramShare,
     },
     {
       icon: MessageCircle,

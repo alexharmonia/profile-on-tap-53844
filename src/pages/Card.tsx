@@ -3,10 +3,14 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card as CardUI, CardContent } from '@/components/ui/card';
-import { Mail, Phone, Globe, Building2, Briefcase, ExternalLink, User, MessageCircle, QrCode, Send } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Mail, Phone, Globe, Building2, Briefcase, ExternalLink, User, MessageCircle, QrCode, Send, Copy } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import QRCodeComponent from 'react-qr-code';
+import { generatePixPayload } from '@/lib/pixUtils';
+import { toast } from 'sonner';
 
 interface Profile {
   full_name: string;
@@ -17,6 +21,9 @@ interface Profile {
   position?: string;
   website?: string;
   profile_image_url?: string;
+  pix_key?: string;
+  pix_beneficiary_name?: string;
+  pix_beneficiary_city?: string;
 }
 
 interface SocialLink {
@@ -38,6 +45,8 @@ interface CatalogProduct {
   button_text?: string | null;
   link_type?: string | null;
   link_url?: string | null;
+  show_images_above?: boolean | null;
+  images?: string[] | null;
 }
 
 interface ContactFormField {
@@ -65,6 +74,10 @@ const Card = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pixDialogOpen, setPixDialogOpen] = useState(false);
+  const [pixAmount, setPixAmount] = useState('');
+  const [pixQRData, setPixQRData] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -365,60 +378,71 @@ const Card = () => {
               <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Catálogo de Produtos
               </h2>
-              <div className="grid gap-6">
+              <div className="flex flex-col gap-6">
                 {catalogProducts.map((product) => {
-                  const getActionButton = () => {
-                    if (!product.link_type || !product.link_url) return null;
+                  const handleProductAction = () => {
+                    if (!product.link_type) return;
 
-                    const buttonText = product.button_text || 'Mais informações';
-                    let href = '';
-                    let icon = <ExternalLink className="h-4 w-4" />;
-
-                    if (product.link_type === 'whatsapp') {
-                      href = `https://wa.me/${product.link_url}`;
-                      icon = <MessageCircle className="h-4 w-4" />;
+                    if (product.link_type === 'whatsapp' && product.link_url) {
+                      window.open(`https://wa.me/${product.link_url}`, '_blank');
                     } else if (product.link_type === 'pix') {
-                      // PIX QR Code or payment link would go here
-                      href = '#';
-                      icon = <QrCode className="h-4 w-4" />;
-                    } else {
-                      href = product.link_url;
+                      setSelectedProduct(product);
+                      setPixDialogOpen(true);
+                      setPixAmount('');
+                      setPixQRData('');
+                    } else if (product.link_url) {
+                      window.open(product.link_url, '_blank');
                     }
-
-                    return (
-                      <Button
-                        asChild
-                        className="w-full h-11 shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
-                      >
-                        <a 
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2"
-                        >
-                          {icon}
-                          {buttonText}
-                        </a>
-                      </Button>
-                    );
                   };
+
+                  const buttonText = product.button_text || 'Mais informações';
+                  const hasImages = product.images && product.images.length > 0;
+                  
+                  let icon = <ExternalLink className="h-4 w-4" />;
+                  if (product.link_type === 'whatsapp') icon = <MessageCircle className="h-4 w-4" />;
+                  if (product.link_type === 'pix') icon = <QrCode className="h-4 w-4" />;
 
                   return (
                     <div
                       key={product.id}
-                      className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/80 p-6 transition-all duration-300 hover:shadow-[var(--shadow-glow)]"
+                      className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/80 transition-all duration-300 hover:shadow-[var(--shadow-glow)]"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="relative z-10 space-y-4">
-                        <div className="space-y-2">
+                      
+                      <div className="relative z-10">
+                        {/* Imagens acima do título */}
+                        {hasImages && product.show_images_above && (
+                          <div className="aspect-video w-full overflow-hidden">
+                            <img 
+                              src={product.images![0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          </div>
+                        )}
+
+                        <div className="p-6 space-y-4">
                           <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                             {product.name}
                           </h3>
+
+                          {/* Imagens abaixo do título */}
+                          {hasImages && !product.show_images_above && (
+                            <div className="aspect-video w-full overflow-hidden rounded-lg">
+                              <img 
+                                src={product.images![0]} 
+                                alt={product.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            </div>
+                          )}
+
                           {product.description && (
                             <p className="text-sm text-muted-foreground leading-relaxed">
                               {product.description}
                             </p>
                           )}
+                          
                           {product.price && (
                             <p className="text-3xl font-bold text-primary">
                               {new Intl.NumberFormat('pt-BR', {
@@ -427,8 +451,17 @@ const Card = () => {
                               }).format(product.price)}
                             </p>
                           )}
+                          
+                          {(product.link_type && (product.link_url || product.link_type === 'pix')) && (
+                            <Button
+                              onClick={handleProductAction}
+                              className="w-full h-11 shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
+                            >
+                              {icon}
+                              <span className="ml-2">{buttonText}</span>
+                            </Button>
+                          )}
                         </div>
-                        {getActionButton()}
                       </div>
                     </div>
                   );
@@ -496,6 +529,106 @@ const Card = () => {
           <p>Criado com NFC Cards</p>
         </div>
       </div>
+      
+      {/* PIX QR Code Dialog para produtos */}
+      <Dialog open={pixDialogOpen} onOpenChange={setPixDialogOpen}>
+        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-gradient-to-br from-card/95 to-card/90 border-border/50 shadow-[var(--shadow-elegant)]">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[var(--shadow-glow)]">
+              <QrCode className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <DialogTitle className="text-2xl text-center font-bold">
+              Pagar com PIX
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              {selectedProduct?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="pix-amount" className="text-sm font-medium">
+                Valor do PIX
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold text-sm shadow-sm">
+                  R$
+                </div>
+                <Input
+                  id="pix-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  value={pixAmount}
+                  onChange={(e) => setPixAmount(e.target.value)}
+                  className="pl-16 h-12 text-lg border-border/50 focus:border-primary transition-all duration-200"
+                />
+              </div>
+              {selectedProduct?.price && (
+                <p className="text-xs text-muted-foreground">
+                  Preço sugerido: {new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  }).format(selectedProduct.price)}
+                </p>
+              )}
+            </div>
+
+            <Button
+              onClick={() => {
+                if (!pixAmount || parseFloat(pixAmount) <= 0) {
+                  toast.error("Por favor, digite um valor válido.");
+                  return;
+                }
+
+                const amount = parseFloat(pixAmount);
+                const pixPayload = generatePixPayload(
+                  profile?.pix_key || '',
+                  profile?.pix_beneficiary_name || profile?.full_name || '',
+                  profile?.pix_beneficiary_city || 'SAO PAULO',
+                  amount,
+                  `PROD${Date.now()}`
+                );
+                setPixQRData(pixPayload);
+              }}
+              className="w-full h-12 text-base font-semibold shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
+              size="lg"
+            >
+              Gerar QR Code
+            </Button>
+
+            {pixQRData && (
+              <div className="space-y-4 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex justify-center p-6 bg-white rounded-xl shadow-inner">
+                  <QRCodeComponent value={pixQRData} size={200} level="H" />
+                </div>
+                <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/30">
+                  <p className="text-sm font-medium text-foreground">Informações do PIX:</p>
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <p><span className="font-semibold">Produto:</span> {selectedProduct?.name}</p>
+                    <p><span className="font-semibold">Chave:</span> {profile?.pix_key}</p>
+                    <p><span className="font-semibold">Beneficiário:</span> {profile?.pix_beneficiary_name || profile?.full_name}</p>
+                    <p><span className="font-semibold">Valor:</span> R$ {parseFloat(pixAmount).toFixed(2)}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(pixQRData);
+                      toast.success("Código PIX copiado!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Código PIX
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
