@@ -78,6 +78,15 @@ const Card = () => {
   const [pixAmount, setPixAmount] = useState('');
   const [pixQRData, setPixQRData] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
+  const [customization, setCustomization] = useState({
+    item_color: '#4F46E5',
+    text_color: '#FFFFFF',
+    item_opacity: 1.0,
+    item_corner_radius: 12,
+    background_type: 'color' as 'color' | 'image',
+    background_color: '#1E40AF',
+    background_image_url: '',
+  });
 
   useEffect(() => {
     loadProfile();
@@ -128,19 +137,38 @@ const Card = () => {
         setCatalogProducts(productsData);
       }
 
-      const { data: formData } = await supabase
+      const { data: contactData } = await supabase
         .from('contact_forms')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
         .maybeSingle();
 
-      if (formData) {
+      if (contactData) {
         setContactForm({
-          ...formData,
-          fields: (formData.fields as any) || [],
+          ...contactData,
+          fields: (contactData.fields as any) || [],
         });
-        setShowContactForm(formData.require_form_fill);
+        setShowContactForm(contactData.require_form_fill);
+      }
+
+      // Carregar configurações de personalização
+      const { data: customizationData } = await supabase
+        .from('customization_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (customizationData) {
+        setCustomization({
+          item_color: customizationData.item_color || '#4F46E5',
+          text_color: customizationData.text_color || '#FFFFFF',
+          item_opacity: customizationData.item_opacity || 1.0,
+          item_corner_radius: customizationData.item_corner_radius || 12,
+          background_type: (customizationData.background_type === 'image' ? 'image' : 'color') as 'color' | 'image',
+          background_color: customizationData.background_color || '#1E40AF',
+          background_image_url: customizationData.background_image_url || '',
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -260,8 +288,24 @@ const Card = () => {
     );
   }
 
+  const containerStyle = {
+    backgroundColor: customization.background_type === 'color' ? customization.background_color : undefined,
+    backgroundImage: customization.background_type === 'image' && customization.background_image_url 
+      ? `url(${customization.background_image_url})` 
+      : undefined,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  };
+
+  const itemStyle = {
+    backgroundColor: customization.item_color,
+    color: customization.text_color,
+    opacity: customization.item_opacity,
+    borderRadius: `${customization.item_corner_radius}px`,
+  };
+
   return (
-    <div className="min-h-screen bg-[image:var(--gradient-primary)] py-12 px-4">
+    <div className="min-h-screen py-12 px-4" style={containerStyle}>
       <div className="max-w-2xl mx-auto space-y-6">
         <CardUI className="backdrop-blur-xl bg-card/90 border-border/50 shadow-[var(--shadow-card)]">
           <CardContent className="pt-8">
@@ -296,9 +340,10 @@ const Card = () => {
               {profile.email && (
                 <a
                   href={`mailto:${profile.email}`}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors"
+                  className="flex items-center gap-3 p-3 transition-all duration-300 hover:scale-[1.02]"
+                  style={itemStyle}
                 >
-                  <Mail className="h-5 w-5 text-primary" />
+                  <Mail className="h-5 w-5" />
                   <span className="text-sm">{profile.email}</span>
                 </a>
               )}
@@ -306,9 +351,10 @@ const Card = () => {
               {profile.phone && (
                 <a
                   href={`tel:${profile.phone}`}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors"
+                  className="flex items-center gap-3 p-3 transition-all duration-300 hover:scale-[1.02]"
+                  style={itemStyle}
                 >
-                  <Phone className="h-5 w-5 text-primary" />
+                  <Phone className="h-5 w-5" />
                   <span className="text-sm">{profile.phone}</span>
                 </a>
               )}
@@ -318,9 +364,10 @@ const Card = () => {
                   href={profile.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors"
+                  className="flex items-center gap-3 p-3 transition-all duration-300 hover:scale-[1.02]"
+                  style={itemStyle}
                 >
-                  <Globe className="h-5 w-5 text-primary" />
+                  <Globe className="h-5 w-5" />
                   <span className="text-sm">{profile.website}</span>
                 </a>
               )}
@@ -373,102 +420,94 @@ const Card = () => {
         )}
 
         {catalogProducts.length > 0 && (
-          <CardUI className="backdrop-blur-xl bg-card/90 border-border/50 shadow-[var(--shadow-card)]">
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Catálogo de Produtos
-              </h2>
-              <div className="flex flex-col gap-6">
-                {catalogProducts.map((product) => {
-                  const handleProductAction = () => {
-                    if (!product.link_type) return;
+          <div className="space-y-6">
+            {catalogProducts.map((product) => {
+              const handleProductAction = () => {
+                if (!product.link_type) return;
 
-                    if (product.link_type === 'whatsapp' && product.link_url) {
-                      window.open(`https://wa.me/${product.link_url}`, '_blank');
-                    } else if (product.link_type === 'pix') {
-                      setSelectedProduct(product);
-                      setPixDialogOpen(true);
-                      setPixAmount('');
-                      setPixQRData('');
-                    } else if (product.link_url) {
-                      window.open(product.link_url, '_blank');
-                    }
-                  };
+                if (product.link_type === 'whatsapp' && product.link_url) {
+                  window.open(`https://wa.me/${product.link_url}`, '_blank');
+                } else if (product.link_type === 'pix') {
+                  setSelectedProduct(product);
+                  setPixDialogOpen(true);
+                  setPixAmount('');
+                  setPixQRData('');
+                } else if (product.link_url) {
+                  window.open(product.link_url, '_blank');
+                }
+              };
 
-                  const buttonText = product.button_text || 'Mais informações';
-                  const hasImages = product.images && product.images.length > 0;
-                  
-                  let icon = <ExternalLink className="h-4 w-4" />;
-                  if (product.link_type === 'whatsapp') icon = <MessageCircle className="h-4 w-4" />;
-                  if (product.link_type === 'pix') icon = <QrCode className="h-4 w-4" />;
+              const buttonText = product.button_text || 'Mais informações';
+              const hasImages = product.images && product.images.length > 0;
+              
+              let icon = <ExternalLink className="h-4 w-4" />;
+              if (product.link_type === 'whatsapp') icon = <MessageCircle className="h-4 w-4" />;
+              if (product.link_type === 'pix') icon = <QrCode className="h-4 w-4" />;
 
-                  return (
-                    <div
-                      key={product.id}
-                      className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/80 transition-all duration-300 hover:shadow-[var(--shadow-glow)]"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              return (
+                <CardUI
+                  key={product.id}
+                  className="backdrop-blur-xl bg-card/95 border-border/50 shadow-[var(--shadow-card)] overflow-hidden group hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
+                >
+                  <CardContent className="p-0">
+                    {/* Imagem do produto */}
+                    {hasImages && (
+                      <div className="aspect-video w-full overflow-hidden">
+                        <img 
+                          src={product.images![0]} 
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+
+                    <div className="p-6 space-y-4">
+                      {/* Título */}
+                      <h3 className="text-2xl font-bold text-foreground">
+                        {product.name}
+                      </h3>
+
+                      {/* Descrição */}
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                          {product.description}
+                        </p>
+                      )}
                       
-                      <div className="relative z-10">
-                        {/* Imagens acima do título */}
-                        {hasImages && product.show_images_above && (
-                          <div className="aspect-video w-full overflow-hidden">
-                            <img 
-                              src={product.images![0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
+                      {/* Observação */}
+                      {product.description && product.description.includes('Obs:') && (
+                        <p className="text-xs text-muted-foreground italic">
+                          {product.description.split('Obs:')[1]}
+                        </p>
+                      )}
+
+                      {/* Preço e botão */}
+                      <div className="flex items-end justify-between pt-4">
+                        {product.price && (
+                          <div className="text-4xl font-bold text-primary">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            }).format(product.price)}
                           </div>
                         )}
-
-                        <div className="p-6 space-y-4">
-                          <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
-
-                          {/* Imagens abaixo do título */}
-                          {hasImages && !product.show_images_above && (
-                            <div className="aspect-video w-full overflow-hidden rounded-lg">
-                              <img 
-                                src={product.images![0]} 
-                                alt={product.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            </div>
-                          )}
-
-                          {product.description && (
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {product.description}
-                            </p>
-                          )}
-                          
-                          {product.price && (
-                            <p className="text-3xl font-bold text-primary">
-                              {new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL',
-                              }).format(product.price)}
-                            </p>
-                          )}
-                          
-                          {(product.link_type && (product.link_url || product.link_type === 'pix')) && (
-                            <Button
-                              onClick={handleProductAction}
-                              className="w-full h-11 shadow-[var(--shadow-glow)] hover:shadow-[var(--shadow-elegant)] transition-all duration-300"
-                            >
-                              {icon}
-                              <span className="ml-2">{buttonText}</span>
-                            </Button>
-                          )}
-                        </div>
+                        
+                        {(product.link_type && (product.link_url || product.link_type === 'pix')) && (
+                          <Button
+                            onClick={handleProductAction}
+                            size="lg"
+                            className="h-12 px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            {buttonText}
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </CardUI>
+                  </CardContent>
+                </CardUI>
+              );
+            })}
+          </div>
         )}
 
         {contactForm && !contactForm.require_form_fill && (
