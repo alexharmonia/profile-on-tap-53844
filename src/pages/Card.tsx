@@ -90,6 +90,64 @@ const Card = () => {
 
   useEffect(() => {
     loadProfile();
+
+    // Setup realtime listeners
+    const profileChannel = supabase
+      .channel('card-profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).id === userId) {
+            loadProfile();
+          }
+        }
+      )
+      .subscribe();
+
+    const customizationChannel = supabase
+      .channel('card-customization-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'customization_settings'
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).user_id === userId) {
+            loadProfile();
+          }
+        }
+      )
+      .subscribe();
+
+    const catalogChannel = supabase
+      .channel('card-catalog-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'catalog_products'
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).user_id === userId) {
+            loadProfile();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(customizationChannel);
+      supabase.removeChannel(catalogChannel);
+    };
   }, [userId]);
 
   const loadProfile = async () => {

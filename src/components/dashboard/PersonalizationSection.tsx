@@ -44,7 +44,7 @@ export const PersonalizationSection = ({ profile, onUpdate }: PersonalizationSec
 
       toast({
         title: "Sucesso!",
-        description: "Perfil atualizado com sucesso.",
+        description: "Perfil atualizado com sucesso. As alterações aparecerão automaticamente no seu perfil.",
       });
 
       onUpdate();
