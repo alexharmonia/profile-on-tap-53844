@@ -42,6 +42,61 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       loadProfileData();
+
+      // Setup realtime listeners
+      const profileChannel = supabase
+        .channel('profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${user.id}`
+          },
+          () => {
+            loadProfileData();
+          }
+        )
+        .subscribe();
+
+      const customizationChannel = supabase
+        .channel('customization-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'customization_settings',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            loadProfileData();
+          }
+        )
+        .subscribe();
+
+      const catalogChannel = supabase
+        .channel('catalog-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'catalog_products',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            loadProfileData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profileChannel);
+        supabase.removeChannel(customizationChannel);
+        supabase.removeChannel(catalogChannel);
+      };
     }
   }, [user]);
 

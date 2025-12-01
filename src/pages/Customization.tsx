@@ -88,7 +88,7 @@ const Customization = () => {
 
       if (error) throw error;
 
-      toast.success('Personalização salva com sucesso!');
+      toast.success('Personalização salva com sucesso! As alterações aparecerão automaticamente no seu perfil.');
     } catch (error) {
       console.error('Error saving customization:', error);
       toast.error('Erro ao salvar personalização');
