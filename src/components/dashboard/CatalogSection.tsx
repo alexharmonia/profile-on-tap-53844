@@ -324,28 +324,33 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="product-price" className="text-sm font-medium">
-                  Preço (R$)
+                <Label htmlFor="product-price" className="text-sm font-medium text-muted-foreground">
+                  PREÇO
                 </Label>
-                <Input
-                  id="product-price"
-                  placeholder="0,00"
-                  value={formData.price}
-                  onChange={(e) => {
-                    const masked = applyCurrencyMask(e.target.value);
-                    setFormData(prev => ({ ...prev, price: masked }));
-                  }}
-                  className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary"
-                />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-muted rounded-lg px-4 py-3 text-muted-foreground font-medium">
+                    Real (R$)
+                  </div>
+                  <Input
+                    id="product-price"
+                    placeholder="0,00"
+                    value={formData.price}
+                    onChange={(e) => {
+                      const masked = applyCurrencyMask(e.target.value);
+                      setFormData(prev => ({ ...prev, price: masked }));
+                    }}
+                    className="flex-1 h-11 transition-all duration-200 focus:ring-2 focus:ring-primary"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="button-text" className="text-sm font-medium">
-                  Texto do Botão
+                <Label htmlFor="button-text" className="text-sm font-medium text-muted-foreground">
+                  TEXTO DO BOTÃO
                 </Label>
                 <Input
                   id="button-text"
-                  placeholder="Ex: Mais informações"
+                  placeholder="Mais informações"
                   value={formData.button_text}
                   onChange={(e) => setFormData(prev => ({ ...prev, button_text: e.target.value }))}
                   className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary"
@@ -353,29 +358,29 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  Tipo de Link para o Botão
+                <Label className="text-sm font-medium text-muted-foreground">
+                  TIPO DE LINK PARA O BOTÃO
                 </Label>
                 <RadioGroup 
                   value={formData.link_type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, link_type: value }))}
-                  className="space-y-2"
+                  className="flex gap-4"
                 >
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors">
+                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="whatsapp" id="whatsapp" />
-                    <Label htmlFor="whatsapp" className="flex-1 cursor-pointer font-normal">
+                    <Label htmlFor="whatsapp" className="cursor-pointer font-normal">
                       WhatsApp
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors">
+                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="custom" id="custom" />
-                    <Label htmlFor="custom" className="flex-1 cursor-pointer font-normal">
+                    <Label htmlFor="custom" className="cursor-pointer font-normal">
                       Link customizado
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors">
+                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="pix" id="pix" />
-                    <Label htmlFor="pix" className="flex-1 cursor-pointer font-normal">
+                    <Label htmlFor="pix" className="cursor-pointer font-normal">
                       Cobre com PIX
                     </Label>
                   </div>
@@ -402,11 +407,15 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
                     <p className="text-xs text-muted-foreground">
                       Digite apenas números, incluindo código do país e DDD
                     </p>
+                  )}
+                </div>
               )}
               
               {/* Seção de imagens */}
               <div className="space-y-3 pt-3 border-t">
-                <Label className="text-sm font-medium">Imagens do Produto</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  IMAGENS DO PRODUTO
+                </Label>
                 <p className="text-xs text-muted-foreground">
                   Você pode arrastar as imagens para ordenar da maneira que desejar
                 </p>
@@ -472,61 +481,49 @@ export const CatalogSection = ({ userId }: CatalogSectionProps) => {
               </div>
 
               {/* Preview do Produto */}
-              {(formData.name || formData.description || formData.price || formData.images.length > 0) && (
-                <div className="space-y-3 pt-3 border-t">
-                  <Label className="text-sm font-medium">Preview do Produto</Label>
-                  <div className="border-2 border-border rounded-lg p-4 bg-muted/20">
-                    {formData.show_images_above && formData.images.length > 0 && (
-                      <div className="mb-3">
-                        <img 
-                          src={formData.images[0]} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                      </div>
-                    )}
-                    
-                    {formData.name && (
-                      <h3 className="text-lg font-semibold mb-2">{formData.name}</h3>
-                    )}
-
-                    {!formData.show_images_above && formData.images.length > 0 && (
-                      <div className="mb-3">
-                        <img 
-                          src={formData.images[0]} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                      </div>
-                    )}
+              <div className="pt-4 border-t space-y-3">
+                <Label className="text-sm font-medium text-muted-foreground">
+                  PREVIEW DO PRODUTO
+                </Label>
+                <div className="border-2 border-border rounded-xl overflow-hidden bg-card shadow-lg">
+                  {formData.images.length > 0 && (
+                    <div className="aspect-video w-full overflow-hidden">
+                      <img 
+                        src={formData.images[0]} 
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="p-4 space-y-3">
+                    <h4 className="font-bold text-xl">
+                      {formData.name || 'Nome do Produto'}
+                    </h4>
                     
                     {formData.description && (
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {formData.description}
                       </p>
                     )}
                     
-                    {formData.price && (
-                      <p className="text-base font-bold text-primary mb-3">
-                        {formData.price}
-                      </p>
-                    )}
-                    
-                    <Button 
-                      type="button" 
-                      className="w-full"
-                      size="sm"
-                      disabled
-                    >
-                      {formData.button_text || 'Mais informações'}
-                      {formData.link_type === 'whatsapp' && ' via WhatsApp'}
-                      {formData.link_type === 'pix' && ' com PIX'}
-                    </Button>
+                    <div className="flex items-end justify-between pt-2">
+                      {formData.price && (
+                        <div className="text-3xl font-bold text-primary">
+                          {formData.price}
+                        </div>
+                      )}
+                      
+                      <Button 
+                        size="lg" 
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      >
+                        {formData.button_text || 'Mais informações'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-              )}
+              </div>
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">
