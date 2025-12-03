@@ -305,35 +305,56 @@ const Profile = () => {
     borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
   };
 
+  // Text color for profile sections
+  const textColor = customization?.text_color || '#FFFFFF';
+
   return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-primary via-primary to-secondary"
-      style={backgroundStyle}
+      className="min-h-screen"
+      style={{
+        ...backgroundStyle,
+        backgroundColor: !customization?.background_image_url ? (customization?.background_color || 'hsl(var(--primary))') : undefined
+      }}
     >
       {/* Header - Sem botões */}
       <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
         {/* Profile Card */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 overflow-hidden">
-          <div className="bg-gradient-to-br from-white/20 to-transparent p-4 sm:p-6 md:p-8 text-center">
-            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 mx-auto border-4 border-white shadow-[var(--shadow-elegant)] mb-4">
+        <Card 
+          className="backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 overflow-hidden"
+          style={{
+            backgroundColor: customization?.item_color ? `${customization.item_color}${Math.round((customization?.item_opacity ?? 1) * 255).toString(16).padStart(2, '0')}` : 'rgba(255,255,255,0.1)',
+            borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
+          }}
+        >
+          <div className="p-4 sm:p-6 md:p-8 text-center">
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 mx-auto border-4 border-white/50 shadow-[var(--shadow-elegant)] mb-4">
               <AvatarImage src={profile?.profile_image_url} />
               <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl font-bold bg-white text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
             
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-foreground mb-2 px-2">
+            <h1 
+              className="text-2xl sm:text-3xl font-bold mb-2 px-2"
+              style={{ color: textColor }}
+            >
               {profile?.full_name}
             </h1>
             
             {profile?.bio && (
-              <p className="text-primary-foreground/90 italic text-base sm:text-lg mb-4 px-2">
+              <p 
+                className="italic text-base sm:text-lg mb-4 px-2 opacity-90"
+                style={{ color: textColor }}
+              >
                 "{profile.bio}"
               </p>
             )}
 
             {(profile?.company || profile?.position) && (
-              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4 px-2 flex-wrap">
+              <div 
+                className="flex items-center justify-center gap-2 mb-4 px-2 flex-wrap opacity-80"
+                style={{ color: textColor }}
+              >
                 <Briefcase className="h-4 w-4 flex-shrink-0" />
                 <span className="text-sm sm:text-base text-center">
                   {profile?.position}{profile?.position && profile?.company ? ' - ' : ''}{profile?.company}
@@ -342,13 +363,19 @@ const Profile = () => {
             )}
 
             {profile?.location && (
-              <div className="flex items-center justify-center gap-2 text-primary-foreground/80 mb-4 px-2">
+              <div 
+                className="flex items-center justify-center gap-2 mb-4 px-2 opacity-80"
+                style={{ color: textColor }}
+              >
                 <MapPin className="h-4 w-4 flex-shrink-0" />
                 <span className="text-sm sm:text-base">{profile.location}</span>
               </div>
             )}
 
-            <p className="text-primary-foreground/70 text-xs sm:text-sm italic mb-4 px-2">
+            <p 
+              className="text-xs sm:text-sm italic mb-4 px-2 opacity-70"
+              style={{ color: textColor }}
+            >
               Tecnologia que funciona de verdade!
             </p>
 
@@ -356,7 +383,11 @@ const Profile = () => {
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
               <Button
                 onClick={handleSaveContact}
-                className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
+                className="border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  color: textColor,
+                }}
                 size="lg"
               >
                 <Download className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -365,7 +396,11 @@ const Profile = () => {
               <Button
                 onClick={handleShare}
                 variant="outline"
-                className="bg-white/10 hover:bg-white/20 text-primary-foreground border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
+                className="border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  color: textColor,
+                }}
                 size="lg"
               >
                 <Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -469,7 +504,10 @@ const Profile = () => {
         {/* Catalog Products */}
         {catalogProducts.length > 0 && (
           <div className="space-y-4 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground flex items-center gap-2">
+            <h2 
+              className="text-xl sm:text-2xl font-bold flex items-center gap-2"
+              style={{ color: textColor }}
+            >
               <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
               Catálogo de Produtos
             </h2>
@@ -477,8 +515,11 @@ const Profile = () => {
               {catalogProducts.map((product) => (
                 <Card 
                   key={product.id}
-                  className="bg-white rounded-xl overflow-hidden shadow-lg"
-                  style={itemStyle}
+                  className="overflow-hidden shadow-lg backdrop-blur-md"
+                  style={{
+                    backgroundColor: customization?.item_color ? `${customization.item_color}${Math.round((customization?.item_opacity ?? 1) * 255).toString(16).padStart(2, '0')}` : 'rgba(255,255,255,0.9)',
+                    borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
+                  }}
                 >
                   {/* Product Images */}
                   {product.images && product.images.length > 0 && (
@@ -492,16 +533,25 @@ const Profile = () => {
                   )}
                   
                   <div className="p-4">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2" style={{ color: customization?.text_color || '#1f2937' }}>
+                    <h3 
+                      className="text-lg sm:text-xl font-bold mb-2"
+                      style={{ color: textColor }}
+                    >
                       {product.name}
                     </h3>
                     {product.description && (
-                      <p className="text-sm mb-3 opacity-80" style={{ color: customization?.text_color || '#4b5563' }}>
+                      <p 
+                        className="text-sm mb-3 opacity-80"
+                        style={{ color: textColor }}
+                      >
                         {product.description}
                       </p>
                     )}
                     {product.price && (
-                      <p className="text-xl font-bold mb-4" style={{ color: customization?.text_color || '#1f2937' }}>
+                      <p 
+                        className="text-xl font-bold mb-4"
+                        style={{ color: textColor }}
+                      >
                         R$ {parseFloat(product.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     )}
@@ -521,45 +571,61 @@ const Profile = () => {
         )}
 
         {/* Contact Form */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] p-4 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground mb-4 sm:mb-6">
+        <Card 
+          className="backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] p-4 sm:p-6"
+          style={{
+            backgroundColor: customization?.item_color ? `${customization.item_color}${Math.round((customization?.item_opacity ?? 1) * 255).toString(16).padStart(2, '0')}` : 'rgba(255,255,255,0.1)',
+            borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
+          }}
+        >
+          <h2 
+            className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6"
+            style={{ color: textColor }}
+          >
             Fale Conosco
           </h2>
           <form onSubmit={handleContactSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name" className="text-primary-foreground">Nome</Label>
+              <Label htmlFor="name" style={{ color: textColor }}>Nome</Label>
               <Input
                 id="name"
                 value={contactForm.name}
                 onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                 required
-                className="bg-white/10 border-white/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                className="bg-white/10 border-white/20"
+                style={{ color: textColor }}
               />
             </div>
             <div>
-              <Label htmlFor="email" className="text-primary-foreground">E-mail</Label>
+              <Label htmlFor="email" style={{ color: textColor }}>E-mail</Label>
               <Input
                 id="email"
                 type="email"
                 value={contactForm.email}
                 onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                 required
-                className="bg-white/10 border-white/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                className="bg-white/10 border-white/20"
+                style={{ color: textColor }}
               />
             </div>
             <div>
-              <Label htmlFor="message" className="text-primary-foreground">Mensagem</Label>
+              <Label htmlFor="message" style={{ color: textColor }}>Mensagem</Label>
               <Input
                 id="message"
                 value={contactForm.message}
                 onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                 required
-                className="bg-white/10 border-white/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                className="bg-white/10 border-white/20"
+                style={{ color: textColor }}
               />
             </div>
             <Button
               type="submit"
-              className="w-full bg-white/20 hover:bg-white/30 text-primary-foreground border border-white/30"
+              className="w-full border border-white/30 hover:opacity-80"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                color: textColor,
+              }}
             >
               Enviar Mensagem
             </Button>
