@@ -24,6 +24,7 @@ const Profile = () => {
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [customLinks, setCustomLinks] = useState<any[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+  const [customization, setCustomization] = useState<any>(null);
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [pixAmount, setPixAmount] = useState('');
   const [pixQRData, setPixQRData] = useState('');
@@ -111,6 +112,15 @@ const Profile = () => {
       .single();
 
     setProfile(profileData);
+
+    // Load customization settings
+    const { data: customizationData } = await supabase
+      .from('customization_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    setCustomization(customizationData);
 
     // Load social links
     const { data: socialData } = await supabase
@@ -275,8 +285,31 @@ const Profile = () => {
     .join('')
     .toUpperCase() || 'U';
 
+  // Build background style from customization settings
+  const backgroundStyle: React.CSSProperties = customization?.background_type === 'image' && customization?.background_image_url
+    ? {
+        backgroundImage: `url(${customization.background_image_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }
+    : {
+        backgroundColor: customization?.background_color || undefined
+      };
+
+  // Build item style from customization settings
+  const itemStyle: React.CSSProperties = {
+    backgroundColor: customization?.item_color ? `${customization.item_color}` : undefined,
+    color: customization?.text_color || undefined,
+    opacity: customization?.item_opacity ?? 1,
+    borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-secondary">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-primary via-primary to-secondary"
+      style={backgroundStyle}
+    >
       {/* Header - Sem botões */}
       <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
         {/* Profile Card */}
@@ -346,8 +379,9 @@ const Profile = () => {
         <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
           {profile?.phone && (
             <Button
-              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
+              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
               variant="outline"
+              style={itemStyle}
               onClick={() => window.open(`tel:${profile.phone}`)}
             >
               <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -357,8 +391,9 @@ const Profile = () => {
 
           {profile?.whatsapp_number && (
             <Button
-              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
+              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
               variant="outline"
+              style={itemStyle}
               onClick={() => window.open(`https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}`)}
             >
               <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -368,8 +403,9 @@ const Profile = () => {
 
           {profile?.email && (
             <Button
-              className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
+              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
               variant="outline"
+              style={itemStyle}
               onClick={() => window.open(`mailto:${profile.email}`)}
             >
               <Mail className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -386,8 +422,9 @@ const Profile = () => {
               return (
                 <Button
                   key={link.id}
-                  className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground capitalize text-sm sm:text-base"
+                  className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 capitalize text-sm sm:text-base transition-all"
                   variant="outline"
+                  style={itemStyle}
                   onClick={() => window.open(link.url, '_blank')}
                 >
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -404,8 +441,9 @@ const Profile = () => {
             {customLinks.map((link) => (
               <Button
                 key={link.id}
-                className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground text-sm sm:text-base"
+                className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
                 variant="outline"
+                style={itemStyle}
                 onClick={() => window.open(link.url, '_blank')}
               >
                 <Globe className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -418,8 +456,9 @@ const Profile = () => {
         {/* PIX Information */}
         {profile?.pix_key && (
           <Button
-            className="w-full h-12 sm:h-14 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 text-primary-foreground mb-4 sm:mb-6 text-sm sm:text-base"
+            className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 mb-4 sm:mb-6 text-sm sm:text-base transition-all"
             variant="outline"
+            style={itemStyle}
             onClick={() => setPixDialogOpen(true)}
           >
             <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
@@ -429,34 +468,56 @@ const Profile = () => {
 
         {/* Catalog Products */}
         {catalogProducts.length > 0 && (
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-[var(--shadow-glow)] mb-4 sm:mb-6 p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground mb-4 flex items-center gap-2">
+          <div className="space-y-4 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-primary-foreground flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6" />
               Catálogo de Produtos
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-4">
               {catalogProducts.map((product) => (
-                <div
+                <Card 
                   key={product.id}
-                  className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-white/20"
+                  className="bg-white rounded-xl overflow-hidden shadow-lg"
+                  style={itemStyle}
                 >
-                  <h3 className="text-base sm:text-lg font-semibold text-primary-foreground mb-2">
-                    {product.name}
-                  </h3>
-                  {product.description && (
-                    <p className="text-primary-foreground/80 text-xs sm:text-sm mb-2 line-clamp-2">
-                      {product.description}
-                    </p>
+                  {/* Product Images */}
+                  {product.images && product.images.length > 0 && (
+                    <div className="w-full">
+                      <img 
+                        src={product.images[0]} 
+                        alt={product.name}
+                        className="w-full h-48 sm:h-56 object-cover"
+                      />
+                    </div>
                   )}
-                  {product.price && (
-                    <p className="text-primary-foreground font-bold text-sm sm:text-base">
-                      R$ {parseFloat(product.price).toFixed(2)}
-                    </p>
-                  )}
-                </div>
+                  
+                  <div className="p-4">
+                    <h3 className="text-lg sm:text-xl font-bold mb-2" style={{ color: customization?.text_color || '#1f2937' }}>
+                      {product.name}
+                    </h3>
+                    {product.description && (
+                      <p className="text-sm mb-3 opacity-80" style={{ color: customization?.text_color || '#4b5563' }}>
+                        {product.description}
+                      </p>
+                    )}
+                    {product.price && (
+                      <p className="text-xl font-bold mb-4" style={{ color: customization?.text_color || '#1f2937' }}>
+                        R$ {parseFloat(product.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    )}
+                    {product.link_url && (
+                      <Button 
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold"
+                        onClick={() => window.open(product.link_url, '_blank')}
+                      >
+                        {product.button_text || 'Mais informações'}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
               ))}
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Contact Form */}
