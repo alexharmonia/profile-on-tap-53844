@@ -182,10 +182,8 @@ export const ContactFormSection = ({
             <h3 className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Formulário de Contatos
             </h3>
-            <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Use o formulário como ferramenta de Marketing 
-para coletar informações dos seus &quot;Leads&quot;                                      
-            </p>
+            <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">Use o formulário como ferramenta de Marketing para coletar
+informações dos seus &quot;Leads&quot;</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportSubmissions} disabled={submissions.length === 0} className="gap-2 shadow-sm hover:shadow-md transition-shadow">
