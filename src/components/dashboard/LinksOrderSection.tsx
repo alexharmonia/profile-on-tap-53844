@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, GripVertical, Edit, Trash2, Plus } from 'lucide-react';
@@ -35,6 +36,7 @@ interface CustomLink {
   url: string;
   icon: string;
   display_order: number;
+  show_icon_only: boolean;
 }
 
 function SortableItem({ link, onEdit, onDelete }: { 
@@ -106,6 +108,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
     title: '',
     url: '',
     icon: 'globe',
+    show_icon_only: false,
   });
 
   const sensors = useSensors(
@@ -196,6 +199,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
+            show_icon_only: formData.show_icon_only,
           })
           .eq('id', editingLink.id);
 
@@ -213,6 +217,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
+            show_icon_only: formData.show_icon_only,
             display_order: links.length,
           }]);
 
@@ -225,7 +230,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
       }
 
       setDialogOpen(false);
-      setFormData({ title: '', url: '', icon: 'globe' });
+      setFormData({ title: '', url: '', icon: 'globe', show_icon_only: false });
       setEditingLink(null);
       loadLinks();
     } catch (error) {
@@ -273,13 +278,14 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
       title: link.title,
       url: link.url,
       icon: link.icon,
+      show_icon_only: link.show_icon_only || false,
     });
     setDialogOpen(true);
   };
 
   const handleAddNew = () => {
     setEditingLink(null);
-    setFormData({ title: '', url: '', icon: 'globe' });
+    setFormData({ title: '', url: '', icon: 'globe', show_icon_only: false });
     setDialogOpen(true);
   };
 
@@ -333,6 +339,17 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
                   value={formData.icon}
                   onChange={(icon) => setFormData({ ...formData, icon })}
                 />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="show_icon_only"
+                  checked={formData.show_icon_only}
+                  onCheckedChange={(checked) => setFormData({ ...formData, show_icon_only: checked === true })}
+                />
+                <Label htmlFor="show_icon_only" className="text-sm font-normal cursor-pointer">
+                  Exibir apenas ícone (sem texto)
+                </Label>
               </div>
             </div>
 

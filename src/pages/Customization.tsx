@@ -97,7 +97,7 @@ const Customization = () => {
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     if (!file.type.startsWith('image/')) {
       toast.error('Por favor, selecione uma imagem válida.');
@@ -125,13 +125,27 @@ const Customization = () => {
         .from('profile-images')
         .getPublicUrl(fileName);
 
-      setCustomization(prev => ({ 
-        ...prev, 
+      const newCustomization = { 
+        ...customization, 
         background_image_url: publicUrl,
-        background_type: 'image'
-      }));
+        background_type: 'image' as const
+      };
+      
+      setCustomization(newCustomization);
 
-      toast.success('Imagem carregada com sucesso!');
+      // Auto-save after upload
+      const { error: saveError } = await supabase
+        .from('customization_settings')
+        .upsert({
+          user_id: user.id,
+          ...newCustomization,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (saveError) throw saveError;
+
+      toast.success('Imagem carregada e salva com sucesso!');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Não foi possível fazer upload da imagem.');
