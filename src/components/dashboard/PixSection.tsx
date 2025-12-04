@@ -88,7 +88,7 @@ export const PixSection = ({
         </div>
 
         <div className="bg-muted/50 p-4 rounded-lg">
-          <p className="text-sm text-muted-foreground">Configure sua chave PIX permitindo que seus clientes façam pagamentos direto pelo seu cartão digital.<strong></strong> Configure sua chave PIX para permitir que seus clientes façam pagamentos diretamente pelo seu cartão digital.
+          <p className="text-sm text-muted-foreground">Configure sua chave PIX para permitir que seus clientes façam pagamentos diretamente pelo seu cartão digital.<strong></strong> ​
           </p>
         </div>
       </div>
