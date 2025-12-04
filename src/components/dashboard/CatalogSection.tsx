@@ -409,7 +409,7 @@ export const CatalogSection = ({
                     </div>}
                   
                   <div className="p-4 space-y-3">
-                    <h4 className="font-bold text-xl">
+                    <h4 className="font-bold text-base">
                       {formData.name || 'Nome do Produto'}
                     </h4>
                     
