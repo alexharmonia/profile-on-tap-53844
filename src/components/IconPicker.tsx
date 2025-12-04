@@ -1,8 +1,9 @@
 import { 
   Globe, ShoppingBag, UtensilsCrossed, MapPin, DollarSign, Plane, Trophy,
   Facebook, Instagram, Mail, Info, Wifi, Phone, Scale,
-  Home, Music, Binoculars, Wallet, Scissors, Calendar, FileText, X,
-  Gift, Clock, Star, Camera, Linkedin, Youtube
+  Home, Music, Binoculars, Wallet, Scissors, Calendar, FileText,
+  Gift, Clock, Star, Camera, Linkedin, Youtube, MessageCircle,
+  Twitter, HeartPulse, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,14 +11,22 @@ import { cn } from "@/lib/utils";
 export const iconOptions = [
   { id: 'none', label: 'Sem ícone', icon: null },
   { id: 'globe', label: 'Globo', icon: Globe },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
+  { id: 'instagram', label: 'Instagram', icon: Instagram },
+  { id: 'facebook', label: 'Facebook', icon: Facebook },
+  { id: 'twitter', label: 'X (Twitter)', icon: Twitter },
+  { id: 'linkedin', label: 'LinkedIn', icon: Linkedin },
+  { id: 'youtube', label: 'YouTube', icon: Youtube },
+  { id: 'spotify', label: 'Spotify', icon: Music },
+  { id: 'deezer', label: 'Deezer', icon: Music },
+  { id: 'canva', label: 'Canva', icon: Palette },
+  { id: 'first-aid', label: 'Primeiros Socorros', icon: HeartPulse },
   { id: 'shopping-bag', label: 'Sacola', icon: ShoppingBag },
   { id: 'utensils', label: 'Garfo/Faca', icon: UtensilsCrossed },
   { id: 'map-pin', label: 'Pin', icon: MapPin },
   { id: 'dollar', label: 'Dólar', icon: DollarSign },
   { id: 'plane', label: 'Avião', icon: Plane },
   { id: 'trophy', label: 'Troféu', icon: Trophy },
-  { id: 'facebook', label: 'Facebook', icon: Facebook },
-  { id: 'instagram', label: 'Instagram', icon: Instagram },
   { id: 'mail', label: 'Email', icon: Mail },
   { id: 'info', label: 'Info', icon: Info },
   { id: 'wifi', label: 'WiFi', icon: Wifi },
@@ -30,13 +39,10 @@ export const iconOptions = [
   { id: 'scissors', label: 'Tesoura', icon: Scissors },
   { id: 'calendar', label: 'Calendário', icon: Calendar },
   { id: 'file', label: 'Documento', icon: FileText },
-  { id: 'x', label: 'X', icon: X },
   { id: 'gift', label: 'Presente', icon: Gift },
   { id: 'clock', label: 'Relógio', icon: Clock },
   { id: 'star', label: 'Estrela', icon: Star },
   { id: 'camera', label: 'Câmera', icon: Camera },
-  { id: 'linkedin', label: 'LinkedIn', icon: Linkedin },
-  { id: 'youtube', label: 'YouTube', icon: Youtube },
 ];
 
 interface IconPickerProps {

@@ -16,6 +16,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import QRCodeComponent from 'react-qr-code';
 import { generatePixPayload } from '@/lib/pixUtils';
+import { iconOptions } from '@/components/IconPicker';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -271,6 +272,11 @@ const Profile = () => {
     }
   };
 
+  const getCustomLinkIcon = (iconId: string) => {
+    const iconOption = iconOptions.find(opt => opt.id === iconId);
+    return iconOption?.icon || Globe;
+  };
+
   if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary to-secondary">
@@ -291,10 +297,11 @@ const Profile = () => {
         backgroundImage: `url(${customization.background_image_url})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#1E40AF' // fallback color while image loads
       }
     : {
-        backgroundColor: customization?.background_color || undefined
+        backgroundColor: customization?.background_color || '#1E40AF'
       };
 
   // Build item style from customization settings
@@ -311,10 +318,7 @@ const Profile = () => {
   return (
     <div 
       className="min-h-screen"
-      style={{
-        ...backgroundStyle,
-        backgroundColor: !customization?.background_image_url ? (customization?.background_color || 'hsl(var(--primary))') : undefined
-      }}
+      style={backgroundStyle}
     >
       {/* Header - Sem botões */}
       <div className="container mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
@@ -451,19 +455,22 @@ const Profile = () => {
 
         {/* Social Links */}
         {socialLinks.length > 0 && (
-          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             {socialLinks.map((link) => {
               const Icon = getSocialIcon(link.platform);
+              const isIconOnly = link.show_icon_only;
+              
               return (
                 <Button
                   key={link.id}
-                  className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 capitalize text-sm sm:text-base transition-all"
+                  className={`${isIconOnly ? 'w-12 h-12 sm:w-14 sm:h-14 p-0' : 'h-12 sm:h-14 px-4 sm:px-6'} backdrop-blur-md border-white/20 hover:opacity-80 capitalize text-sm sm:text-base transition-all`}
                   variant="outline"
                   style={itemStyle}
                   onClick={() => window.open(link.url, '_blank')}
+                  title={link.platform}
                 >
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-                  {link.platform}
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${!isIconOnly ? 'mr-2 sm:mr-3' : ''}`} />
+                  {!isIconOnly && link.platform}
                 </Button>
               );
             })}
@@ -472,19 +479,25 @@ const Profile = () => {
 
         {/* Custom Links */}
         {customLinks.length > 0 && (
-          <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-            {customLinks.map((link) => (
-              <Button
-                key={link.id}
-                className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
-                variant="outline"
-                style={itemStyle}
-                onClick={() => window.open(link.url, '_blank')}
-              >
-                <Globe className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-                {link.title}
-              </Button>
-            ))}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {customLinks.map((link) => {
+              const Icon = getCustomLinkIcon(link.icon);
+              const isIconOnly = link.show_icon_only;
+              
+              return (
+                <Button
+                  key={link.id}
+                  className={`${isIconOnly ? 'w-12 h-12 sm:w-14 sm:h-14 p-0' : 'h-12 sm:h-14 px-4 sm:px-6'} backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all`}
+                  variant="outline"
+                  style={itemStyle}
+                  onClick={() => window.open(link.url, '_blank')}
+                  title={link.title}
+                >
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${!isIconOnly ? 'mr-2 sm:mr-3' : ''}`} />
+                  {!isIconOnly && link.title}
+                </Button>
+              );
+            })}
           </div>
         )}
 
