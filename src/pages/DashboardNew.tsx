@@ -154,7 +154,7 @@ const DashboardNew = () => {
             icon={List}
             iconColor="bg-orange-500"
           >
-            <LinksOrderSection userId={user.id} />
+            <LinksOrderSection userId={user.id} profile={profile} onUpdate={loadProfile} />
           </AccordionSection>
 
           <AccordionSection
