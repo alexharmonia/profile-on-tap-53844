@@ -504,12 +504,12 @@ const Profile = () => {
               return (
                 <Button
                   key={link.id}
-                  className="w-full h-12 sm:h-14 px-4 sm:px-6 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all justify-start"
+                  className="w-full h-12 sm:h-14 px-4 sm:px-6 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
                   variant="outline"
                   style={itemStyle}
                   onClick={() => window.open(link.url, '_blank')}
                 >
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-3 sm:mr-4" />
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
                   {link.title}
                 </Button>
               );
