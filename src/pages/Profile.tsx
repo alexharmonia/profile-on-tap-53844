@@ -123,7 +123,7 @@ const Profile = () => {
 
     setCustomization(customizationData);
 
-    // Load social links
+    // Load social links (for display_order and show_icon_only settings)
     const { data: socialData } = await supabase
       .from('social_links')
       .select('*')
@@ -151,6 +151,65 @@ const Profile = () => {
 
     setCatalogProducts(catalogData || []);
   };
+
+  // Build unified links list combining social links from profile with custom links
+  const buildUnifiedLinks = () => {
+    if (!profile) return [];
+
+    const socialLinkConfig: Record<string, { title: string; icon: any; getUrl: () => string | null }> = {
+      phone: { title: 'Telefone', icon: Phone, getUrl: () => profile?.phone ? `tel:${profile.phone}` : null },
+      whatsapp: { title: 'WhatsApp', icon: MessageCircle, getUrl: () => profile?.whatsapp_number ? `https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}` : null },
+      email: { title: 'E-mail', icon: Mail, getUrl: () => profile?.email ? `mailto:${profile.email}` : null },
+      google_reviews: { title: 'Avaliações no Google', icon: Globe, getUrl: () => profile?.google_reviews_url || null },
+      instagram: { title: 'Instagram', icon: Instagram, getUrl: () => profile?.instagram_handle ? `https://instagram.com/${profile.instagram_handle}` : null },
+      website: { title: 'Website', icon: Globe, getUrl: () => profile?.website || null },
+    };
+
+    const unifiedLinks: Array<{
+      id: string;
+      title: string;
+      url: string;
+      icon: any;
+      display_order: number;
+      show_icon_only: boolean;
+      type: 'social' | 'custom';
+    }> = [];
+
+    // Add profile-based social links
+    Object.entries(socialLinkConfig).forEach(([key, config], index) => {
+      const url = config.getUrl();
+      if (url) {
+        const socialLink = socialLinks.find(s => s.platform === key);
+        unifiedLinks.push({
+          id: `profile-${key}`,
+          title: config.title,
+          url: url,
+          icon: config.icon,
+          display_order: socialLink?.display_order ?? 100 + index,
+          show_icon_only: socialLink?.show_icon_only || false,
+          type: 'social',
+        });
+      }
+    });
+
+    // Add custom links
+    customLinks.forEach(link => {
+      unifiedLinks.push({
+        id: link.id,
+        title: link.title,
+        url: link.url,
+        icon: getCustomLinkIcon(link.icon),
+        display_order: link.display_order,
+        show_icon_only: link.show_icon_only || false,
+        type: 'custom',
+      });
+    });
+
+    // Sort by display_order
+    return unifiedLinks.sort((a, b) => a.display_order - b.display_order);
+  };
+
+  const unifiedLinks = buildUnifiedLinks();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -414,74 +473,11 @@ const Profile = () => {
           </div>
         </Card>
 
-        {/* Contact Buttons */}
-        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-          {profile?.phone && (
-            <Button
-              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
-              variant="outline"
-              style={itemStyle}
-              onClick={() => window.open(`tel:${profile.phone}`)}
-            >
-              <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-              Telefone
-            </Button>
-          )}
-
-          {profile?.whatsapp_number && (
-            <Button
-              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
-              variant="outline"
-              style={itemStyle}
-              onClick={() => window.open(`https://wa.me/${profile.whatsapp_number.replace(/\D/g, '')}`)}
-            >
-              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-              WhatsApp
-            </Button>
-          )}
-
-          {profile?.email && (
-            <Button
-              className="w-full h-12 sm:h-14 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
-              variant="outline"
-              style={itemStyle}
-              onClick={() => window.open(`mailto:${profile.email}`)}
-            >
-              <Mail className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-              E-mail
-            </Button>
-          )}
-        </div>
-
-        {/* Social Links */}
-        {socialLinks.length > 0 && (
+        {/* Unified Links - All links ordered by display_order */}
+        {unifiedLinks.length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            {socialLinks.map((link) => {
-              const Icon = getSocialIcon(link.platform);
-              const isIconOnly = link.show_icon_only;
-              
-              return (
-                <Button
-                  key={link.id}
-                  className={`${isIconOnly ? 'w-12 h-12 sm:w-14 sm:h-14 p-0' : 'h-12 sm:h-14 px-4 sm:px-6'} backdrop-blur-md border-white/20 hover:opacity-80 capitalize text-sm sm:text-base transition-all`}
-                  variant="outline"
-                  style={itemStyle}
-                  onClick={() => window.open(link.url, '_blank')}
-                  title={link.platform}
-                >
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${!isIconOnly ? 'mr-2 sm:mr-3' : ''}`} />
-                  {!isIconOnly && link.platform}
-                </Button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Custom Links */}
-        {customLinks.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            {customLinks.map((link) => {
-              const Icon = getCustomLinkIcon(link.icon);
+            {unifiedLinks.map((link) => {
+              const Icon = link.icon;
               const isIconOnly = link.show_icon_only;
               
               return (

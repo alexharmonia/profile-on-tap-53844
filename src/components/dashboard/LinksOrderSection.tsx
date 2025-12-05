@@ -28,21 +28,40 @@ import { CSS } from '@dnd-kit/utilities';
 
 interface LinksOrderSectionProps {
   userId: string;
+  profile: any;
+  onUpdate: () => void;
 }
 
-interface CustomLink {
+interface UnifiedLink {
   id: string;
   title: string;
   url: string;
   icon: string;
   display_order: number;
   show_icon_only: boolean;
+  type: 'custom' | 'social';
+  platform?: string;
 }
 
-function SortableItem({ link, onEdit, onDelete }: { 
-  link: CustomLink; 
-  onEdit: (link: CustomLink) => void;
+const socialLinkConfig: Record<string, { title: string; icon: string; getUrl: (profile: any) => string | null }> = {
+  phone: { title: 'Telefone', icon: 'phone', getUrl: (p) => p?.phone ? `tel:${p.phone}` : null },
+  whatsapp: { title: 'WhatsApp', icon: 'whatsapp', getUrl: (p) => p?.whatsapp_number ? `https://wa.me/${p.whatsapp_number.replace(/\D/g, '')}` : null },
+  email: { title: 'E-mail', icon: 'mail', getUrl: (p) => p?.email ? `mailto:${p.email}` : null },
+  google_reviews: { title: 'Avaliações no Google', icon: 'star', getUrl: (p) => p?.google_reviews_url || null },
+  instagram: { title: 'Instagram', icon: 'instagram', getUrl: (p) => p?.instagram_handle ? `https://instagram.com/${p.instagram_handle}` : null },
+  website: { title: 'Website', icon: 'globe', getUrl: (p) => p?.website || null },
+};
+
+function SortableRow({ 
+  link, 
+  onEdit, 
+  onDelete,
+  onToggleIconOnly 
+}: { 
+  link: UnifiedLink; 
+  onEdit: (link: UnifiedLink) => void;
   onDelete: (id: string) => void;
+  onToggleIconOnly: (link: UnifiedLink, checked: boolean) => void;
 }) {
   const {
     attributes,
@@ -63,52 +82,63 @@ function SortableItem({ link, onEdit, onDelete }: {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:bg-accent/5 transition-colors"
+      className="grid grid-cols-[40px_1fr_120px_80px] items-center gap-2 p-3 bg-card border-b border-border hover:bg-accent/5 transition-colors"
     >
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing touch-none"
+        className="cursor-grab active:cursor-grabbing touch-none flex justify-center"
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
       </div>
       
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{link.title}</p>
-        <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+      <div className="min-w-0">
+        <p className="font-medium truncate text-sm">{link.title}</p>
       </div>
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onEdit(link)}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => onDelete(link.id)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      <div className="flex justify-center">
+        <Checkbox
+          checked={link.show_icon_only}
+          onCheckedChange={(checked) => onToggleIconOnly(link, checked === true)}
+        />
+      </div>
+
+      <div className="flex gap-1 justify-center">
+        {link.type === 'custom' && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(link)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(link.id)}
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
-  const [links, setLinks] = useState<CustomLink[]>([]);
+export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSectionProps) => {
+  const [links, setLinks] = useState<UnifiedLink[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<CustomLink | null>(null);
+  const [editingLink, setEditingLink] = useState<UnifiedLink | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
     url: '',
     icon: 'globe',
-    show_icon_only: false,
   });
 
   const sensors = useSensors(
@@ -120,21 +150,66 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
 
   useEffect(() => {
     loadLinks();
-  }, [userId]);
+  }, [userId, profile]);
 
   const loadLinks = async () => {
-    const { data, error } = await supabase
+    // Load custom links
+    const { data: customLinks, error: customError } = await supabase
       .from('custom_links')
       .select('*')
       .eq('user_id', userId)
       .order('display_order', { ascending: true });
 
-    if (error) {
-      console.error('Error loading links:', error);
-      return;
+    if (customError) {
+      console.error('Error loading custom links:', customError);
     }
 
-    setLinks(data || []);
+    // Load social links
+    const { data: socialLinks, error: socialError } = await supabase
+      .from('social_links')
+      .select('*')
+      .eq('user_id', userId)
+      .order('display_order', { ascending: true });
+
+    if (socialError) {
+      console.error('Error loading social links:', socialError);
+    }
+
+    // Build unified list from profile-based social links
+    const profileSocialLinks: UnifiedLink[] = [];
+    
+    Object.entries(socialLinkConfig).forEach(([key, config], index) => {
+      const url = config.getUrl(profile);
+      if (url) {
+        // Check if there's an existing social_link entry for this platform
+        const existingSocial = socialLinks?.find(s => s.platform === key);
+        profileSocialLinks.push({
+          id: existingSocial?.id || `profile-${key}`,
+          title: config.title,
+          url: url,
+          icon: config.icon,
+          display_order: existingSocial?.display_order ?? 100 + index,
+          show_icon_only: existingSocial?.show_icon_only || false,
+          type: 'social',
+          platform: key,
+        });
+      }
+    });
+
+    // Convert custom links
+    const customUnified: UnifiedLink[] = (customLinks || []).map(link => ({
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      icon: link.icon || 'globe',
+      display_order: link.display_order,
+      show_icon_only: link.show_icon_only || false,
+      type: 'custom' as const,
+    }));
+
+    // Combine and sort by display_order
+    const allLinks = [...profileSocialLinks, ...customUnified].sort((a, b) => a.display_order - b.display_order);
+    setLinks(allLinks);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -152,22 +227,46 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
 
     // Update display_order in database
     try {
-      const updates = newLinks.map((link, index) => ({
-        id: link.id,
-        display_order: index,
-      }));
+      for (let i = 0; i < newLinks.length; i++) {
+        const link = newLinks[i];
+        if (link.type === 'custom') {
+          await supabase
+            .from('custom_links')
+            .update({ display_order: i })
+            .eq('id', link.id);
+        } else if (link.type === 'social' && link.platform) {
+          // Check if social_link exists, if not create it
+          const { data: existing } = await supabase
+            .from('social_links')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('platform', link.platform)
+            .single();
 
-      for (const update of updates) {
-        await supabase
-          .from('custom_links')
-          .update({ display_order: update.display_order })
-          .eq('id', update.id);
+          if (existing) {
+            await supabase
+              .from('social_links')
+              .update({ display_order: i })
+              .eq('id', existing.id);
+          } else {
+            await supabase
+              .from('social_links')
+              .insert({
+                user_id: userId,
+                platform: link.platform,
+                url: link.url,
+                display_order: i,
+                show_icon_only: link.show_icon_only,
+              });
+          }
+        }
       }
 
       toast({
         title: "Sucesso!",
         description: "Ordem dos links atualizada.",
       });
+      onUpdate();
     } catch (error) {
       console.error('Error updating order:', error);
       toast({
@@ -175,7 +274,61 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
         description: "Não foi possível atualizar a ordem.",
         variant: "destructive",
       });
-      loadLinks(); // Reload to get correct order
+      loadLinks();
+    }
+  };
+
+  const handleToggleIconOnly = async (link: UnifiedLink, checked: boolean) => {
+    try {
+      if (link.type === 'custom') {
+        await supabase
+          .from('custom_links')
+          .update({ show_icon_only: checked })
+          .eq('id', link.id);
+      } else if (link.type === 'social' && link.platform) {
+        // Check if social_link exists
+        const { data: existing } = await supabase
+          .from('social_links')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('platform', link.platform)
+          .single();
+
+        if (existing) {
+          await supabase
+            .from('social_links')
+            .update({ show_icon_only: checked })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('social_links')
+            .insert({
+              user_id: userId,
+              platform: link.platform,
+              url: link.url,
+              display_order: link.display_order,
+              show_icon_only: checked,
+            });
+        }
+      }
+
+      // Update local state
+      setLinks(prev => prev.map(l => 
+        l.id === link.id ? { ...l, show_icon_only: checked } : l
+      ));
+
+      toast({
+        title: "Sucesso!",
+        description: "Configuração atualizada.",
+      });
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating icon only:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -199,7 +352,6 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
-            show_icon_only: formData.show_icon_only,
           })
           .eq('id', editingLink.id);
 
@@ -217,7 +369,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
-            show_icon_only: formData.show_icon_only,
+            show_icon_only: false,
             display_order: links.length,
           }]);
 
@@ -230,9 +382,10 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
       }
 
       setDialogOpen(false);
-      setFormData({ title: '', url: '', icon: 'globe', show_icon_only: false });
+      setFormData({ title: '', url: '', icon: 'globe' });
       setEditingLink(null);
       loadLinks();
+      onUpdate();
     } catch (error) {
       console.error('Error saving link:', error);
       toast({
@@ -262,6 +415,7 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
       });
 
       loadLinks();
+      onUpdate();
     } catch (error) {
       console.error('Error deleting link:', error);
       toast({
@@ -272,20 +426,19 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
     }
   };
 
-  const handleEditLink = (link: CustomLink) => {
+  const handleEditLink = (link: UnifiedLink) => {
     setEditingLink(link);
     setFormData({
       title: link.title,
       url: link.url,
       icon: link.icon,
-      show_icon_only: link.show_icon_only || false,
     });
     setDialogOpen(true);
   };
 
   const handleAddNew = () => {
     setEditingLink(null);
-    setFormData({ title: '', url: '', icon: 'globe', show_icon_only: false });
+    setFormData({ title: '', url: '', icon: 'globe' });
     setDialogOpen(true);
   };
 
@@ -340,17 +493,6 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
                   onChange={(icon) => setFormData({ ...formData, icon })}
                 />
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show_icon_only"
-                  checked={formData.show_icon_only}
-                  onCheckedChange={(checked) => setFormData({ ...formData, show_icon_only: checked === true })}
-                />
-                <Label htmlFor="show_icon_only" className="text-sm font-normal cursor-pointer">
-                  Exibir apenas ícone (sem texto)
-                </Label>
-              </div>
             </div>
 
             <DialogFooter>
@@ -370,6 +512,14 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
         </Dialog>
       </div>
 
+      {/* Table Header */}
+      <div className="grid grid-cols-[40px_1fr_120px_80px] items-center gap-2 p-3 bg-muted/50 border border-border rounded-t-lg text-sm font-medium text-muted-foreground">
+        <div className="text-center">Arraste</div>
+        <div>Título</div>
+        <div className="text-center">Exibir apenas ícone</div>
+        <div className="text-center">Ações</div>
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -379,18 +529,19 @@ export const LinksOrderSection = ({ userId }: LinksOrderSectionProps) => {
           items={links.map(link => link.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-2">
+          <div className="border border-t-0 border-border rounded-b-lg overflow-hidden">
             {links.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Nenhum link adicionado ainda.
+                Nenhum link disponível. Adicione redes sociais ou links personalizados.
               </p>
             ) : (
               links.map((link) => (
-                <SortableItem
+                <SortableRow
                   key={link.id}
                   link={link}
                   onEdit={handleEditLink}
                   onDelete={handleDeleteLink}
+                  onToggleIconOnly={handleToggleIconOnly}
                 />
               ))
             )}
