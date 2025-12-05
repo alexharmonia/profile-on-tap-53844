@@ -475,24 +475,42 @@ const Profile = () => {
           </div>
         </Card>
 
-        {/* Unified Links - All links ordered by display_order */}
-        {unifiedLinks.length > 0 && (
+        {/* Icon-only links - horizontal row */}
+        {unifiedLinks.filter(l => l.show_icon_only).length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            {unifiedLinks.map((link) => {
+            {unifiedLinks.filter(l => l.show_icon_only).map((link) => {
               const Icon = link.icon;
-              const isIconOnly = link.show_icon_only;
-              
               return (
                 <Button
                   key={link.id}
-                  className={`${isIconOnly ? 'w-12 h-12 sm:w-14 sm:h-14 p-0' : 'h-12 sm:h-14 px-4 sm:px-6'} backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all`}
+                  className="w-12 h-12 sm:w-14 sm:h-14 p-0 backdrop-blur-md border-white/20 hover:opacity-80 transition-all"
                   variant="outline"
                   style={itemStyle}
                   onClick={() => window.open(link.url, '_blank')}
                   title={link.title}
                 >
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${!isIconOnly ? 'mr-2 sm:mr-3' : ''}`} />
-                  {!isIconOnly && link.title}
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </Button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Links with text - vertical list */}
+        {unifiedLinks.filter(l => !l.show_icon_only).length > 0 && (
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 w-full">
+            {unifiedLinks.filter(l => !l.show_icon_only).map((link) => {
+              const Icon = link.icon;
+              return (
+                <Button
+                  key={link.id}
+                  className="w-full h-12 sm:h-14 px-4 sm:px-6 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all justify-start"
+                  variant="outline"
+                  style={itemStyle}
+                  onClick={() => window.open(link.url, '_blank')}
+                >
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-3 sm:mr-4" />
+                  {link.title}
                 </Button>
               );
             })}
