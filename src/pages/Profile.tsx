@@ -205,11 +205,9 @@ const Profile = () => {
       });
     });
 
-    // Sort by display_order
+  // Sort by display_order
     return unifiedLinks.sort((a, b) => a.display_order - b.display_order);
   };
-
-  const unifiedLinks = buildUnifiedLinks();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -332,9 +330,13 @@ const Profile = () => {
   };
 
   const getCustomLinkIcon = (iconId: string) => {
+    if (!iconOptions || !Array.isArray(iconOptions)) return Globe;
     const iconOption = iconOptions.find(opt => opt.id === iconId);
     return iconOption?.icon || Globe;
   };
+
+  // Build unified links - must be after profile check
+  const unifiedLinks = profile ? buildUnifiedLinks() : [];
 
   if (loading || !profile) {
     return (
