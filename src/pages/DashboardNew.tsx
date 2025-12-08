@@ -75,52 +75,55 @@ const DashboardNew = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground py-6 sm:py-8 md:py-12 px-3 sm:px-4 shadow-lg">
+      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground py-4 sm:py-6 md:py-8 lg:py-12 px-2 sm:px-4 shadow-lg">
         <div className="container mx-auto max-w-4xl">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
-              <Avatar className="h-16 w-16 sm:h-18 sm:w-18 md:h-20 md:w-20 border-3 sm:border-4 border-white shadow-lg flex-shrink-0">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Avatar e nome - sempre em linha */}
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+              <Avatar className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 border-2 sm:border-3 md:border-4 border-white shadow-lg flex-shrink-0">
                 <AvatarImage src={profile?.profile_image_url} />
-                <AvatarFallback className="text-xl sm:text-2xl font-bold bg-white text-primary">
+                <AvatarFallback className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-white text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-3xl font-bold truncate">
                   Olá, {profile?.full_name || 'Usuário'}!
                 </h1>
-                <p className="text-primary-foreground/80 mt-0.5 sm:mt-1 text-sm sm:text-base">
+                <p className="text-primary-foreground/80 mt-0.5 text-xs sm:text-sm md:text-base">
                   Gerencie seu cartão digital
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto justify-center sm:justify-end">
+            
+            {/* Botões de ação - grid responsivo */}
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:flex sm:flex-wrap sm:justify-end">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setShareDialogOpen(true)}
-                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+                className="gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 h-auto min-h-[36px] sm:min-h-[40px]"
               >
-                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Compartilhar</span>
+                <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs md:text-sm truncate">Compartilhar</span>
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => navigate('/profile')}
-                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+                className="gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 h-auto min-h-[36px] sm:min-h-[40px]"
               >
-                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Meu perfil</span>
+                <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs md:text-sm truncate">Meu perfil</span>
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleLogout}
-                className="gap-1.5 sm:gap-2 flex-1 sm:flex-initial"
+                className="gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 h-auto min-h-[36px] sm:min-h-[40px]"
               >
-                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Sair</span>
+                <LogOut className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs md:text-sm truncate">Sair</span>
               </Button>
             </div>
           </div>
