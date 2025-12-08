@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import QRCodeComponent from 'react-qr-code';
 import { generatePixPayload } from '@/lib/pixUtils';
 import { iconOptions } from '@/components/IconPicker';
+import { ShareDialog } from '@/components/ShareDialog';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ const Profile = () => {
   const [pixDialogOpen, setPixDialogOpen] = useState(false);
   const [pixAmount, setPixAmount] = useState('');
   const [pixQRData, setPixQRData] = useState('');
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -439,18 +441,11 @@ const Profile = () => {
               </div>
             )}
 
-            <p 
-              className="text-xs sm:text-sm italic mb-4 px-2 opacity-70"
-              style={{ color: textColor }}
-            >
-              Tecnologia que funciona de verdade!
-            </p>
-
             {/* Botões de ação no perfil */}
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
               <Button
                 onClick={handleSaveContact}
-                className="border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80"
+                className="border border-white/20 shadow-sm hover:shadow-md transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80 rounded-lg"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.2)',
                   color: textColor,
@@ -461,9 +456,9 @@ const Profile = () => {
                 Salvar Agenda
               </Button>
               <Button
-                onClick={handleShare}
+                onClick={() => setShareDialogOpen(true)}
                 variant="outline"
-                className="border-2 border-white/30 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80"
+                className="border border-white/20 shadow-sm hover:shadow-md transition-all duration-300 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg w-full sm:w-auto hover:opacity-80 rounded-lg"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.1)',
                   color: textColor,
@@ -780,6 +775,14 @@ const Profile = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        profileUrl={`${window.location.origin}/card/${user?.id}`}
+        userName={profile?.full_name || 'Usuário'}
+      />
     </div>
   );
 };
