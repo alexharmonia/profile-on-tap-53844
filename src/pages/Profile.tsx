@@ -173,6 +173,7 @@ const Profile = () => {
       display_order: number;
       show_icon_only: boolean;
       type: 'social' | 'custom';
+      link_type?: 'url' | 'wifi';
     }> = [];
 
     // Add profile-based social links
@@ -202,6 +203,7 @@ const Profile = () => {
         display_order: link.display_order,
         show_icon_only: link.show_icon_only || false,
         type: 'custom',
+        link_type: (link.link_type as 'url' | 'wifi') || 'url',
       });
     });
 
@@ -480,14 +482,25 @@ const Profile = () => {
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             {unifiedLinks.filter(l => l.show_icon_only).map((link) => {
               const Icon = link.icon;
+              const handleClick = () => {
+                if (link.link_type === 'wifi') {
+                  navigator.clipboard.writeText(link.url);
+                  toast({
+                    title: "Senha copiada!",
+                    description: "A senha do Wi-Fi foi copiada para a área de transferência.",
+                  });
+                } else {
+                  window.open(link.url, '_blank');
+                }
+              };
               return (
                 <Button
                   key={link.id}
                   className="w-12 h-12 sm:w-14 sm:h-14 p-0 backdrop-blur-md border-white/20 hover:opacity-80 transition-all"
                   variant="outline"
                   style={itemStyle}
-                  onClick={() => window.open(link.url, '_blank')}
-                  title={link.title}
+                  onClick={handleClick}
+                  title={link.link_type === 'wifi' ? `${link.title} - Clique para copiar` : link.title}
                 >
                   <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </Button>
@@ -501,13 +514,24 @@ const Profile = () => {
           <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 w-full">
             {unifiedLinks.filter(l => !l.show_icon_only).map((link) => {
               const Icon = link.icon;
+              const handleClick = () => {
+                if (link.link_type === 'wifi') {
+                  navigator.clipboard.writeText(link.url);
+                  toast({
+                    title: "Senha copiada!",
+                    description: "A senha do Wi-Fi foi copiada para a área de transferência.",
+                  });
+                } else {
+                  window.open(link.url, '_blank');
+                }
+              };
               return (
                 <Button
                   key={link.id}
                   className="w-full h-12 sm:h-14 px-4 sm:px-6 backdrop-blur-md border-white/20 hover:opacity-80 text-sm sm:text-base transition-all"
                   variant="outline"
                   style={itemStyle}
-                  onClick={() => window.open(link.url, '_blank')}
+                  onClick={handleClick}
                 >
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
                   {link.title}

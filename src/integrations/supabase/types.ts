@@ -157,6 +157,7 @@ export type Database = {
           icon: string | null
           id: string
           is_pulsing: boolean | null
+          link_type: string | null
           show_icon_only: boolean | null
           title: string
           url: string
@@ -168,6 +169,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_pulsing?: boolean | null
+          link_type?: string | null
           show_icon_only?: boolean | null
           title: string
           url: string
@@ -179,6 +181,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_pulsing?: boolean | null
+          link_type?: string | null
           show_icon_only?: boolean | null
           title?: string
           url?: string
