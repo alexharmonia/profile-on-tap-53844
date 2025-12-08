@@ -41,6 +41,7 @@ interface UnifiedLink {
   show_icon_only: boolean;
   type: 'custom' | 'social';
   platform?: string;
+  link_type?: 'url' | 'wifi';
 }
 
 const socialLinkConfig: Record<string, { title: string; icon: string; getUrl: (profile: any) => string | null }> = {
@@ -139,6 +140,7 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
     title: '',
     url: '',
     icon: 'globe',
+    link_type: 'url' as 'url' | 'wifi',
   });
 
   const sensors = useSensors(
@@ -205,6 +207,7 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
       display_order: link.display_order,
       show_icon_only: link.show_icon_only || false,
       type: 'custom' as const,
+      link_type: (link.link_type as 'url' | 'wifi') || 'url',
     }));
 
     // Combine and sort by display_order
@@ -352,6 +355,7 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
+            link_type: formData.link_type,
           })
           .eq('id', editingLink.id);
 
@@ -369,6 +373,7 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
             title: formData.title,
             url: formData.url,
             icon: formData.icon,
+            link_type: formData.link_type,
             show_icon_only: false,
             display_order: links.length,
           }]);
@@ -382,7 +387,7 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
       }
 
       setDialogOpen(false);
-      setFormData({ title: '', url: '', icon: 'globe' });
+      setFormData({ title: '', url: '', icon: 'globe', link_type: 'url' });
       setEditingLink(null);
       loadLinks();
       onUpdate();
@@ -432,13 +437,14 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
       title: link.title,
       url: link.url,
       icon: link.icon,
+      link_type: link.link_type || 'url',
     });
     setDialogOpen(true);
   };
 
   const handleAddNew = () => {
     setEditingLink(null);
-    setFormData({ title: '', url: '', icon: 'globe' });
+    setFormData({ title: '', url: '', icon: 'globe', link_type: 'url' });
     setDialogOpen(true);
   };
 
@@ -477,20 +483,32 @@ export const LinksOrderSection = ({ userId, profile, onUpdate }: LinksOrderSecti
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="url">URL</Label>
+                <Label htmlFor="url">
+                  {formData.icon === 'wifi' ? 'Senha do Wi-Fi' : 'URL'}
+                </Label>
                 <Input
                   id="url"
-                  placeholder="https://exemplo.com"
+                  placeholder={formData.icon === 'wifi' ? 'Digite a senha do Wi-Fi' : 'https://exemplo.com'}
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                  type={formData.icon === 'wifi' ? 'text' : 'url'}
                 />
+                {formData.icon === 'wifi' && (
+                  <p className="text-xs text-muted-foreground">
+                    Ao clicar neste link, a senha será copiada para a área de transferência.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Ícone</Label>
                 <IconPicker
                   value={formData.icon}
-                  onChange={(icon) => setFormData({ ...formData, icon })}
+                  onChange={(icon) => {
+                    // Se mudar para wifi, automaticamente define o tipo como wifi
+                    const newLinkType = icon === 'wifi' ? 'wifi' : 'url';
+                    setFormData({ ...formData, icon, link_type: newLinkType });
+                  }}
                 />
               </div>
             </div>
