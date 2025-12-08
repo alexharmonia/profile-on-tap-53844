@@ -422,7 +422,11 @@ export const CatalogSection = ({
                           {formData.price}
                         </div>}
                       
-                      <Button size="lg" className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
+                      <Button 
+                        size="lg" 
+                        className="bg-white hover:bg-gray-50 border border-gray-200"
+                        style={{ color: '#647498' }}
+                      >
                         {formData.button_text || 'Mais informações'}
                       </Button>
                     </div>

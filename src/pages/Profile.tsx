@@ -603,14 +603,21 @@ const Profile = () => {
                         R$ {parseFloat(product.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     )}
-                    {product.link_url && (
-                      <Button 
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold"
-                        onClick={() => window.open(product.link_url, '_blank')}
-                      >
-                        {product.button_text || 'Mais informações'}
-                      </Button>
-                    )}
+                    <Button 
+                      className="w-full bg-white hover:bg-gray-50 border border-gray-200 font-semibold"
+                      style={{ color: '#647498' }}
+                      onClick={() => {
+                        if (product.link_type === 'whatsapp' && product.link_url) {
+                          window.open(`https://wa.me/${product.link_url}`, '_blank');
+                        } else if (product.link_type === 'pix') {
+                          setPixDialogOpen(true);
+                        } else if (product.link_url) {
+                          window.open(product.link_url, '_blank');
+                        }
+                      }}
+                    >
+                      {product.button_text || 'Mais informações'}
+                    </Button>
                   </div>
                 </Card>
               ))}
