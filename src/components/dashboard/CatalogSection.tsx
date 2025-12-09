@@ -11,6 +11,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { GripVertical, Edit, Trash2, Plus, X, Upload } from 'lucide-react';
 import { applyCurrencyMask, parseCurrencyToNumber } from '@/lib/pixUtils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 interface CatalogSectionProps {
   userId: string;
 }
@@ -147,6 +164,29 @@ export const CatalogSection = ({
       return;
     }
     loadProducts();
+  };
+
+  const handleReorderProducts = async (oldIndex: number, newIndex: number) => {
+    const reorderedProducts = arrayMove(products, oldIndex, newIndex);
+    setProducts(reorderedProducts);
+
+    // Update display_order in database
+    const updates = reorderedProducts.map((product, index) => ({
+      id: product.id,
+      display_order: index
+    }));
+
+    for (const update of updates) {
+      await supabase
+        .from('catalog_products')
+        .update({ display_order: update.display_order })
+        .eq('id', update.id);
+    }
+
+    toast({
+      title: "Sucesso!",
+      description: "Ordem dos produtos atualizada."
+    });
   };
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
@@ -450,47 +490,161 @@ export const CatalogSection = ({
         </Dialog>
       </div>
 
-      <div className="space-y-2">
-        {products.length === 0 ? <div className="text-center py-12 text-muted-foreground">
-            <p>Nenhum produto no catálogo ainda.</p>
-            <p className="text-sm mt-2">Clique em "Adicionar produto" para começar.</p>
-          </div> : <div className="border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="w-12 p-2"></th>
-                  <th className="text-left p-3">Nome</th>
-                  <th className="text-left p-3">Preço</th>
-                  <th className="text-center p-3">Ações</th>
-                  <th className="text-center p-3">Ocultar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(product => <tr key={product.id} className="border-t hover:bg-muted/30">
-                    <td className="p-2 text-center">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-move inline-block" />
-                    </td>
-                    <td className="p-3 font-medium">{product.name}</td>
-                    <td className="p-3 text-muted-foreground">{formatPrice(product.price)}</td>
-                    <td className="p-3">
-                      <div className="flex justify-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-center">
-                        <Switch checked={!product.is_visible} onCheckedChange={() => handleToggleVisibility(product.id, product.is_visible)} />
-                      </div>
-                    </td>
-                  </tr>)}
-              </tbody>
-            </table>
-          </div>}
-      </div>
+      <ProductList 
+        products={products}
+        formatPrice={formatPrice}
+        handleEditProduct={handleEditProduct}
+        handleDeleteProduct={handleDeleteProduct}
+        handleToggleVisibility={handleToggleVisibility}
+        onReorder={handleReorderProducts}
+      />
     </div>;
+};
+
+// Sortable Product Row Component
+const SortableProductRow = ({ 
+  product, 
+  formatPrice, 
+  handleEditProduct, 
+  handleDeleteProduct, 
+  handleToggleVisibility 
+}: { 
+  product: any;
+  formatPrice: (price: number | null) => string;
+  handleEditProduct: (product: any) => void;
+  handleDeleteProduct: (id: string) => void;
+  handleToggleVisibility: (id: string, currentVisibility: boolean) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style} className="border-t hover:bg-muted/30">
+      <td className="p-2 text-center">
+        <GripVertical 
+          className="h-5 w-5 text-muted-foreground cursor-grab active:cursor-grabbing inline-block" 
+          {...attributes}
+          {...listeners}
+        />
+      </td>
+      <td className="p-3 font-medium">{product.name}</td>
+      <td className="p-3 text-muted-foreground">{formatPrice(product.price)}</td>
+      <td className="p-3">
+        <div className="flex justify-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </td>
+      <td className="p-3">
+        <div className="flex justify-center">
+          <Switch 
+            checked={!product.is_visible} 
+            onCheckedChange={() => handleToggleVisibility(product.id, product.is_visible)} 
+          />
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+// Product List Component with Drag and Drop
+const ProductList = ({ 
+  products, 
+  formatPrice, 
+  handleEditProduct, 
+  handleDeleteProduct, 
+  handleToggleVisibility,
+  onReorder 
+}: { 
+  products: any[];
+  formatPrice: (price: number | null) => string;
+  handleEditProduct: (product: any) => void;
+  handleDeleteProduct: (id: string) => void;
+  handleToggleVisibility: (id: string, currentVisibility: boolean) => void;
+  onReorder: (oldIndex: number, newIndex: number) => void;
+}) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = products.findIndex((p) => p.id === active.id);
+      const newIndex = products.findIndex((p) => p.id === over.id);
+      onReorder(oldIndex, newIndex);
+    }
+  };
+
+  if (products.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className="text-center py-12 text-muted-foreground">
+          <p>Nenhum produto no catálogo ainda.</p>
+          <p className="text-sm mt-2">Clique em "Adicionar produto" para começar.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="border rounded-lg overflow-hidden">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="w-12 p-2"></th>
+                <th className="text-left p-3">Nome</th>
+                <th className="text-left p-3">Preço</th>
+                <th className="text-center p-3">Ações</th>
+                <th className="text-center p-3">Ocultar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <SortableContext
+                items={products.map(p => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {products.map(product => (
+                  <SortableProductRow
+                    key={product.id}
+                    product={product}
+                    formatPrice={formatPrice}
+                    handleEditProduct={handleEditProduct}
+                    handleDeleteProduct={handleDeleteProduct}
+                    handleToggleVisibility={handleToggleVisibility}
+                  />
+                ))}
+              </SortableContext>
+            </tbody>
+          </table>
+        </DndContext>
+      </div>
+    </div>
+  );
 };

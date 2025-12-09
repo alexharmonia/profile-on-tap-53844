@@ -83,7 +83,7 @@ const Card = () => {
     text_color: '#FFFFFF',
     item_opacity: 1.0,
     item_corner_radius: 12,
-    background_type: 'color' as 'color' | 'image',
+    background_type: 'color' as 'color' | 'image' | 'gradient',
     background_color: '#1E40AF',
     background_image_url: '',
   });
@@ -223,7 +223,7 @@ const Card = () => {
           text_color: customizationData.text_color || '#FFFFFF',
           item_opacity: customizationData.item_opacity || 1.0,
           item_corner_radius: customizationData.item_corner_radius || 12,
-          background_type: (customizationData.background_type === 'image' ? 'image' : 'color') as 'color' | 'image',
+          background_type: (customizationData.background_type === 'image' ? 'image' : customizationData.background_type === 'gradient' ? 'gradient' : 'color') as 'color' | 'image' | 'gradient',
           background_color: customizationData.background_color || '#1E40AF',
           background_image_url: customizationData.background_image_url || '',
         });
@@ -350,6 +350,9 @@ const Card = () => {
     backgroundColor: customization.background_type === 'color' ? customization.background_color : undefined,
     backgroundImage: customization.background_type === 'image' && customization.background_image_url 
       ? `url(${customization.background_image_url})` 
+      : undefined,
+    background: customization.background_type === 'gradient' && customization.background_color?.startsWith('linear-gradient')
+      ? customization.background_color
       : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
