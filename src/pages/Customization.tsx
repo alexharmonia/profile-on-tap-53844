@@ -26,7 +26,7 @@ const Customization = () => {
     text_color: '#FFFFFF',
     item_opacity: 1.0,
     item_corner_radius: 12,
-    background_type: 'color' as 'color' | 'image',
+    background_type: 'color' as 'color' | 'image' | 'gradient',
     background_color: '#1E40AF',
     background_image_url: '',
   });
@@ -66,7 +66,7 @@ const Customization = () => {
         text_color: customData.text_color || '#FFFFFF',
         item_opacity: customData.item_opacity || 1.0,
         item_corner_radius: customData.item_corner_radius || 12,
-        background_type: (customData.background_type === 'image' ? 'image' : 'color') as 'color' | 'image',
+        background_type: (customData.background_type === 'image' ? 'image' : customData.background_type === 'gradient' ? 'gradient' : 'color') as 'color' | 'image' | 'gradient',
         background_color: customData.background_color || '#1E40AF',
         background_image_url: customData.background_image_url || '',
       });
@@ -467,6 +467,44 @@ const Customization = () => {
               className="hidden"
             />
 
+            {/* Gradient Options */}
+            <div className="space-y-4">
+              <Label className="text-sm font-medium">Escolha um fundo degradê</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                  'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                  'linear-gradient(135deg, #667eea 0%, #00c9ff 100%)',
+                  'linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)',
+                  'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
+                  'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                ].map((gradient, index) => (
+                  <button
+                    key={index}
+                    className={`w-full aspect-square rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                      customization.background_type === 'gradient' && customization.background_color === gradient 
+                        ? 'border-primary ring-2 ring-primary ring-offset-2' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    style={{ background: gradient }}
+                    onClick={() => setCustomization(prev => ({ 
+                      ...prev, 
+                      background_type: 'gradient',
+                      background_color: gradient,
+                      background_image_url: ''
+                    }))}
+                    title={`Gradiente ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
             {customization.background_type === 'color' && (
               <div className="space-y-4">
                 <Label>Escolha a cor do fundo</Label>
@@ -485,6 +523,16 @@ const Customization = () => {
                     placeholder="#1E40AF"
                   />
                 </div>
+              </div>
+            )}
+
+            {customization.background_type === 'gradient' && (
+              <div className="space-y-2">
+                <Label>Gradiente selecionado</Label>
+                <div 
+                  className="w-full h-16 rounded-lg border border-border"
+                  style={{ background: customization.background_color }}
+                />
               </div>
             )}
 

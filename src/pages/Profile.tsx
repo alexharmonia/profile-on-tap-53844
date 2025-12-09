@@ -365,6 +365,10 @@ const Profile = () => {
         backgroundRepeat: 'no-repeat',
         backgroundColor: '#1E40AF' // fallback color while image loads
       }
+    : customization?.background_type === 'gradient' && customization?.background_color?.startsWith('linear-gradient')
+    ? {
+        background: customization.background_color
+      }
     : {
         backgroundColor: customization?.background_color || '#1E40AF'
       };
@@ -569,8 +573,8 @@ const Profile = () => {
                     borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
                   }}
                 >
-                  {/* Product Images */}
-                  {product.images && product.images.length > 0 && (
+                  {/* Product Images - Show above title if show_images_above is true */}
+                  {product.show_images_above && product.images && product.images.length > 0 && (
                     <div className="w-full">
                       <img 
                         src={product.images[0]} 
@@ -587,6 +591,18 @@ const Profile = () => {
                     >
                       {product.name}
                     </h3>
+
+                    {/* Product Images - Show below title if show_images_above is false */}
+                    {!product.show_images_above && product.images && product.images.length > 0 && (
+                      <div className="w-full mb-3 -mx-4">
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name}
+                          className="w-full h-48 sm:h-56 object-cover"
+                        />
+                      </div>
+                    )}
+
                     {product.description && (
                       <p 
                         className="text-sm mb-3 opacity-80"
