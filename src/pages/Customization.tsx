@@ -162,14 +162,19 @@ const Customization = () => {
     );
   }
 
-  const previewStyle = {
-    backgroundColor: customization.background_type === 'color' ? customization.background_color : undefined,
-    backgroundImage: customization.background_type === 'image' && customization.background_image_url 
-      ? `url(${customization.background_image_url})` 
-      : undefined,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  };
+  const previewStyle: React.CSSProperties = customization.background_type === 'image' && customization.background_image_url 
+    ? {
+        backgroundImage: `url(${customization.background_image_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : customization.background_type === 'gradient' && customization.background_color?.startsWith('linear-gradient')
+    ? {
+        background: customization.background_color,
+      }
+    : {
+        backgroundColor: customization.background_color || '#1E40AF',
+      };
 
   const itemStyle = {
     backgroundColor: customization.item_color,
@@ -272,7 +277,7 @@ const Customization = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tipo de fundo:</span>
-                  <span className="font-semibold capitalize">{customization.background_type === 'color' ? 'Cor' : 'Imagem'}</span>
+                  <span className="font-semibold capitalize">{customization.background_type === 'color' ? 'Cor' : customization.background_type === 'gradient' ? 'Degradê' : 'Imagem'}</span>
                 </div>
               </div>
             </Card>
