@@ -356,52 +356,6 @@ const Customization = () => {
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant={customization.item_color !== customization.text_color ? "default" : "outline"}
-                className="h-20 flex-col gap-2"
-                onClick={() => {
-                  // Reset to contrasting colors
-                  setCustomization(prev => ({
-                    ...prev,
-                    item_color: '#4F46E5',
-                    text_color: '#FFFFFF'
-                  }));
-                }}
-              >
-                <div className="text-xs font-semibold">Cor dos itens</div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => {
-                  setCustomization(prev => ({
-                    ...prev,
-                    text_color: prev.text_color === '#FFFFFF' ? '#000000' : '#FFFFFF'
-                  }));
-                }}
-              >
-                <div className="text-xs font-semibold">Cor dos textos</div>
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-              >
-                <div className="text-xs font-semibold">Opacidade</div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-              >
-                <div className="text-xs font-semibold">Cantos</div>
-              </Button>
-            </div>
-
             <div className="space-y-4">
               <Label>Escolha a cor dos itens</Label>
               <div className="flex items-center gap-4">
@@ -489,32 +443,21 @@ const Customization = () => {
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <Upload className="h-5 w-5 animate-pulse" />
-                ) : (
-                  <Upload className="h-5 w-5" />
-                )}
-                <div className="text-xs font-semibold">
-                  {uploading ? 'Enviando...' : 'Carregar imagem'}
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2"
-                onClick={() => setCustomization(prev => ({ ...prev, background_type: 'color' }))}
-              >
-                <Palette className="h-5 w-5" />
-                <div className="text-xs font-semibold">Escolher cor</div>
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              className="w-full h-14 flex items-center justify-center gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Upload className="h-5 w-5 animate-pulse" />
+              ) : (
+                <Upload className="h-5 w-5" />
+              )}
+              <span className="text-sm font-semibold">
+                {uploading ? 'Enviando...' : 'Carregar imagem'}
+              </span>
+            </Button>
 
             <input
               ref={fileInputRef}
