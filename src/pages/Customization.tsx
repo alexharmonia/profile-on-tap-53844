@@ -498,12 +498,34 @@ const Customization = () => {
                         : 'border-border hover:border-primary/50'
                     }`}
                     style={{ background: gradient }}
-                    onClick={() => setCustomization(prev => ({ 
-                      ...prev, 
-                      background_type: 'gradient',
-                      background_color: gradient,
-                      background_image_url: ''
-                    }))}
+                    onClick={async () => {
+                      const newCustomization = { 
+                        ...customization, 
+                        background_type: 'gradient' as const,
+                        background_color: gradient,
+                        background_image_url: ''
+                      };
+                      setCustomization(newCustomization);
+                      
+                      // Auto-save gradient selection
+                      if (user) {
+                        try {
+                          const { error } = await supabase
+                            .from('customization_settings')
+                            .upsert({
+                              user_id: user.id,
+                              ...newCustomization,
+                            }, {
+                              onConflict: 'user_id'
+                            });
+                          if (error) throw error;
+                          toast.success('Degradê aplicado com sucesso!');
+                        } catch (error) {
+                          console.error('Error saving gradient:', error);
+                          toast.error('Erro ao salvar degradê');
+                        }
+                      }
+                    }}
                     title={`Gradiente ${index + 1}`}
                   />
                 ))}
