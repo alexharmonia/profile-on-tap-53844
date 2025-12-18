@@ -113,11 +113,13 @@ const Customization = () => {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `backgrounds/${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/backgrounds/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('profile-images')
         .upload(fileName, file, { upsert: true });
+      
+      console.log('Upload result:', { uploadError, uploadData });
 
       if (uploadError) throw uploadError;
 
@@ -151,6 +153,10 @@ const Customization = () => {
       toast.error('Não foi possível fazer upload da imagem.');
     } finally {
       setUploading(false);
+      // Reset file input to allow uploading the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
