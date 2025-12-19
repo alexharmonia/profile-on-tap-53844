@@ -62,13 +62,13 @@ const Customization = () => {
 
     if (customData) {
       setCustomization({
-        item_color: customData.item_color || '#4F46E5',
-        text_color: customData.text_color || '#FFFFFF',
-        item_opacity: customData.item_opacity || 1.0,
-        item_corner_radius: customData.item_corner_radius || 12,
+        item_color: customData.item_color ?? '#4F46E5',
+        text_color: customData.text_color ?? '#FFFFFF',
+        item_opacity: customData.item_opacity ?? 1.0,
+        item_corner_radius: customData.item_corner_radius ?? 12,
         background_type: (customData.background_type === 'image' ? 'image' : customData.background_type === 'gradient' ? 'gradient' : 'color') as 'color' | 'image' | 'gradient',
-        background_color: customData.background_color || '#1E40AF',
-        background_image_url: customData.background_image_url || '',
+        background_color: customData.background_color ?? '#1E40AF',
+        background_image_url: customData.background_image_url ?? '',
       });
     }
   };
