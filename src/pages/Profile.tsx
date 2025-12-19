@@ -567,7 +567,7 @@ const Profile = () => {
               {catalogProducts.map((product) => (
                 <Card 
                   key={product.id}
-                  className="overflow-hidden shadow-lg backdrop-blur-md"
+                  className="overflow-hidden shadow-lg backdrop-blur-md border-0"
                   style={{
                     backgroundColor: customization?.item_color ? `${customization.item_color}${Math.round((customization?.item_opacity ?? 1) * 255).toString(16).padStart(2, '0')}` : 'rgba(255,255,255,0.9)',
                     borderRadius: customization?.item_corner_radius ? `${customization.item_corner_radius}px` : undefined,
@@ -585,25 +585,47 @@ const Profile = () => {
                   )}
                   
                   <div className="p-4">
-                    <h3 
-                      className="text-lg sm:text-xl font-bold mb-2"
-                      style={{ color: textColor }}
-                    >
-                      {product.name}
-                    </h3>
-
-                    {/* Product Images - Show below title if show_images_above is false */}
-                    {!product.show_images_above && product.images && product.images.length > 0 && (
-                      <div className="w-full mb-3 -mx-4">
-                        <img 
-                          src={product.images[0]} 
-                          alt={product.name}
-                          className="w-full h-48 sm:h-56 object-cover"
-                        />
-                      </div>
+                    {/* Title - Show only if show_images_above is true */}
+                    {product.show_images_above && (
+                      <h3 
+                        className="text-lg sm:text-xl font-bold mb-2"
+                        style={{ color: textColor }}
+                      >
+                        {product.name}
+                      </h3>
                     )}
 
-                    {product.description && (
+                    {/* Product Images - Show below description if show_images_above is false */}
+                    {!product.show_images_above && (
+                      <>
+                        {product.description && (
+                          <p 
+                            className="text-sm mb-3 opacity-80"
+                            style={{ color: textColor }}
+                          >
+                            {product.description}
+                          </p>
+                        )}
+                        {product.images && product.images.length > 0 && (
+                          <div className="w-full mb-3 rounded-lg overflow-hidden">
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-48 sm:h-56 object-cover"
+                            />
+                          </div>
+                        )}
+                        <h3 
+                          className="text-lg sm:text-xl font-bold mb-2"
+                          style={{ color: textColor }}
+                        >
+                          {product.name}
+                        </h3>
+                      </>
+                    )}
+
+                    {/* Description - Show only if show_images_above is true (already shown above for false) */}
+                    {product.show_images_above && product.description && (
                       <p 
                         className="text-sm mb-3 opacity-80"
                         style={{ color: textColor }}
@@ -611,6 +633,7 @@ const Profile = () => {
                         {product.description}
                       </p>
                     )}
+                    
                     {product.price && (
                       <p 
                         className="text-xl font-bold mb-4"
