@@ -456,10 +456,12 @@ export const CatalogSection = ({
                 <Label className="text-sm font-medium text-muted-foreground">
                   PREVIEW DO PRODUTO
                 </Label>
-                <div className="border-2 border-border rounded-xl overflow-hidden bg-card shadow-lg">
-                  {formData.images.length > 0 && <div className="aspect-video w-full overflow-hidden">
+                <div className="rounded-xl overflow-hidden bg-card shadow-lg">
+                  {formData.show_images_above && formData.images.length > 0 && (
+                    <div className="aspect-video w-full overflow-hidden">
                       <img src={formData.images[0]} alt="Preview" className="w-full h-full object-cover" />
-                    </div>}
+                    </div>
+                  )}
                   
                   <div className="p-4 space-y-3">
                     <h4 className="font-bold text-base font-sans">
@@ -469,6 +471,12 @@ export const CatalogSection = ({
                     {formData.description && <p className="text-sm text-muted-foreground line-clamp-2">
                         {formData.description}
                       </p>}
+
+                    {!formData.show_images_above && formData.images.length > 0 && (
+                      <div className="aspect-video w-full overflow-hidden rounded-lg">
+                        <img src={formData.images[0]} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     
                     <div className="flex flex-col items-center gap-3 pt-2">
                       {formData.price && <div className="text-3xl font-bold text-primary">
