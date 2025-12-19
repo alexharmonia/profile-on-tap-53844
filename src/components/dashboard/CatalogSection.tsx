@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { GripVertical, Edit, Trash2, Plus, X, Upload } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 import { applyCurrencyMask, parseCurrencyToNumber } from '@/lib/pixUtils';
 import {
   DndContext,
@@ -39,6 +40,7 @@ export const CatalogSection = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [customization, setCustomization] = useState<Tables<'customization_settings'> | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -50,9 +52,20 @@ export const CatalogSection = ({
     images: [] as string[]
   });
   const [uploadingImages, setUploadingImages] = useState(false);
+  
   useEffect(() => {
     loadProducts();
+    loadCustomization();
   }, [userId]);
+
+  const loadCustomization = async () => {
+    const { data } = await supabase
+      .from('customization_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    if (data) setCustomization(data);
+  };
   const loadProducts = async () => {
     const {
       data,
@@ -457,15 +470,15 @@ export const CatalogSection = ({
                         {formData.description}
                       </p>}
                     
-                    <div className="flex items-end justify-between pt-2">
+                    <div className="flex flex-col items-center gap-3 pt-2">
                       {formData.price && <div className="text-3xl font-bold text-primary">
                           {formData.price}
                         </div>}
                       
                       <Button 
-                        size="lg" 
-                        className="bg-white hover:bg-gray-50 border border-gray-200"
-                        style={{ color: '#647498' }}
+                        size="sm" 
+                        className="bg-white hover:bg-gray-50 border border-gray-200 px-3 py-1 h-auto text-sm w-fit"
+                        style={{ color: customization?.item_color || '#647498' }}
                       >
                         {formData.button_text || 'Mais informações'}
                       </Button>
